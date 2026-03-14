@@ -813,6 +813,12 @@ syncskills(
 - `output_path`：目标文件路径；不传时使用 `skills.agent_md_path`。
 - `mode`：可选 `none`、`tool_description`、`cli_description`。
 
+**模式选择建议**
+
+- `none`：适合希望目标运行时在 `AGENTS.md` 中直接看到可用 skill 列表的场景
+- `tool_description`：适合希望目标运行时看到面向 tool 的使用说明，而不是内嵌 skills 表的场景
+- `cli_description`：适合希望目标运行时看到面向 CLI 的使用说明，而不是内嵌 skills 表的场景
+
 **返回值**
 
 - 返回最终写入的文件路径 `Path`。
@@ -846,6 +852,16 @@ from magicskills import REGISTRY, syncskills
 
 coder = REGISTRY.get_skills("coder")
 path = syncskills(coder, mode="tool_description")
+print(path)
+```
+
+只使用 `cli_description` 同步：
+
+```python
+from magicskills import REGISTRY, syncskills
+
+coder = REGISTRY.get_skills("coder")
+path = syncskills(coder, mode="cli_description")
 print(path)
 ```
 

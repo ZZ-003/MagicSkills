@@ -185,6 +185,12 @@ magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_des
 - `cli_description`: write only `<usage>` using the collection's `cli_description`
 - `-y, --yes`: skip interactive confirmation and sync immediately
 
+**How to choose the mode**
+
+- `none`: use this when the target runtime should receive the explicit list of available skills inside `AGENTS.md`
+- `tool_description`: use this when the target runtime should see tool-oriented usage guidance instead of the embedded skills table
+- `cli_description`: use this when the target runtime should see CLI-oriented usage guidance instead of the embedded skills table
+
 **Examples**
 
 Sync to the collection's default `agent_md_path`:

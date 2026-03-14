@@ -812,6 +812,12 @@ syncskills(
 - `output_path`: the target file path; if omitted, `skills.agent_md_path` is used
 - `mode`: one of `none`, `tool_description`, or `cli_description`
 
+**How to choose the mode**
+
+- `none`: use this when the target runtime should receive the explicit list of available skills in `AGENTS.md`
+- `tool_description`: use this when the target runtime should receive tool-oriented usage guidance instead of the embedded skills table
+- `cli_description`: use this when the target runtime should receive CLI-oriented usage guidance instead of the embedded skills table
+
 **Return value**
 
 - returns the final written file path as a `Path`
@@ -845,6 +851,16 @@ from magicskills import REGISTRY, syncskills
 
 coder = REGISTRY.get_skills("coder")
 path = syncskills(coder, mode="tool_description")
+print(path)
+```
+
+Sync using only `cli_description`:
+
+```python
+from magicskills import REGISTRY, syncskills
+
+coder = REGISTRY.get_skills("coder")
+path = syncskills(coder, mode="cli_description")
 print(path)
 ```
 

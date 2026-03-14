@@ -159,6 +159,20 @@ magicskills createskills agent1_skills --skill-list pdf docx --agent-md-path /ag
 magicskills syncskills agent1_skills
 ```
 
+`syncskills` 支持三种同步到 `AGENTS.md` 的模式：
+
+- `none`：保留标准的 `<usage> + <available_skills>` 结构；适合希望运行时直接看到明确 skill 列表的场景
+- `tool_description`：只写 `<usage>`，内容来自集合的 `tool_description`；适合让 `AGENTS.md` 表达面向 tool 的调用约定，而不是内嵌 skills 表
+- `cli_description`：只写 `<usage>`，内容来自集合的 `cli_description`；适合让 `AGENTS.md` 引导运行时走 `magicskills` CLI 命令
+
+示例：
+
+```bash
+magicskills syncskills agent1_skills --mode none
+magicskills syncskills agent1_skills --mode tool_description
+magicskills syncskills agent1_skills --mode cli_description
+```
+
 如果目标文件已经包含 skills 区块，就会替换；如果没有，就会追加一个新的区块。
 
 ### 5. 🛠️ 或直接使用工具接口
@@ -427,7 +441,9 @@ from magicskills import (
 1. 把 skill 安装到一个共享目录，例如 `~/allskills/`、`./.claude/skills` 或 `~/.claude/skills`
 2. 使用 `createskills` 创建一个只包含部分 skill 的命名集合
 3. 使用 `syncskills` 把该集合写入目标 `AGENTS.md`
-4. 让 agent 只读取这个目标 `AGENTS.md`
+4. 根据目标运行时选择同步模式：
+   `none` 用于注入显式 skill 列表，`tool_description` 用于面向 tool 的使用说明，`cli_description` 用于面向 CLI 的使用说明
+5. 让 agent 只读取这个目标 `AGENTS.md`
 
 示例：
 

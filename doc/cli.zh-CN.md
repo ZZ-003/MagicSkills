@@ -186,6 +186,12 @@ magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_des
 - `cli_description`：只输出 `<usage>`，内容来自集合的 `cli_description`。
 - `-y, --yes`：跳过交互确认，直接同步。
 
+**模式选择建议**
+
+- `none`：适合希望目标运行时在 `AGENTS.md` 中直接看到可用 skill 列表的场景
+- `tool_description`：适合希望目标运行时看到面向 tool 的使用说明，而不是内嵌 skills 表的场景
+- `cli_description`：适合希望目标运行时看到面向 CLI 的使用说明，而不是内嵌 skills 表的场景
+
 **功能示例**
 
 同步到集合默认的 `agent_md_path`：

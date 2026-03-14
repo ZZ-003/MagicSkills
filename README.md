@@ -159,6 +159,20 @@ This means:
 magicskills syncskills agent1_skills
 ```
 
+`syncskills` supports three `AGENTS.md` sync modes:
+
+- `none`: keep the standard `<usage> + <available_skills>` structure; use this when the runtime should see the explicit skill list
+- `tool_description`: write only `<usage>` using the collection's `tool_description`; use this when you want `AGENTS.md` to describe a tool-oriented invocation contract instead of embedding the skill table
+- `cli_description`: write only `<usage>` using the collection's `cli_description`; use this when you want `AGENTS.md` to guide the runtime toward `magicskills` CLI commands
+
+Examples:
+
+```bash
+magicskills syncskills agent1_skills --mode none
+magicskills syncskills agent1_skills --mode tool_description
+magicskills syncskills agent1_skills --mode cli_description
+```
+
 If the target file already contains a skills section, it is replaced. If not, a new one is appended.
 
 ### 5. 🛠️ Or Use The Tool Interface Directly
@@ -428,7 +442,9 @@ The recommended flow is:
 1. Install skills into a shared directory, such as `~/allskills/`, `./.claude/skills`, or `~/.claude/skills`
 2. Use `createskills` to create a named collection that contains only a subset of skills
 3. Use `syncskills` to write that collection into the target `AGENTS.md`
-4. Let the agent read only that target `AGENTS.md`
+4. Choose the sync mode based on the target runtime:
+   `none` for explicit skill list injection, `tool_description` for tool-oriented guidance, `cli_description` for CLI-oriented guidance
+5. Let the agent read only that target `AGENTS.md`
 
 Example:
 

@@ -6,6 +6,7 @@ import importlib
 import sys
 from pathlib import Path
 
+from .command.change_cli_description import change_cli_description
 from .command.change_tool_description import change_tool_description
 from .command.createskill import createskill
 from .command.createskill_template import createskill_template
@@ -25,21 +26,22 @@ from .command.syncskills import syncskills
 from .command.uploadskill import uploadskill
 from .type.skill import Skill
 from .type.skills import Skills
-from .type.skillsregistry import ALL_SKILLS, REGISTRY, SkillsRegistry
+from .type.skillsregistry import ALL_SKILLS, REGISTRY
 
 
 __version__ = "0.1.0"
 
 DEFAULT_SKILLS_ROOT = Path.cwd() / ".claude" / "skills"
+changeclidescription = change_cli_description
 changetooldescription = change_tool_description
 
 __all__ = [
     "Skill",
     "Skills",
-    "SkillsRegistry",
     "REGISTRY",
     "ALL_SKILLS",
     "DEFAULT_SKILLS_ROOT",
+    "change_cli_description",
     "change_tool_description",
     "createskill",
     "createskill_template",
@@ -57,6 +59,7 @@ __all__ = [
     "uploadskill",
     "loadskills",
     "saveskills",
+    "changeclidescription",
     "changetooldescription",
     "install",
 ]

@@ -17,14 +17,19 @@ def _absolute_path(value: Path | str) -> Path:
     return Path(value).expanduser().resolve()
 
 
-def syncskills(skills: Skills, output_path: Path | str | None = None) -> Path:
+def syncskills(skills: Skills, output_path: Path | str | None = None, mode: str = "none") -> Path:
     """Sync current skills collection into AGENTS.md content."""
     path = _absolute_path(output_path) if output_path else skills.agent_md_path
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# AGENTS\n", encoding="utf-8")
     content = read_text(path)
-    new_section = generate_skills_xml(skills.skill_list, invocation=skills.tool_description)
+    new_section = generate_skills_xml(
+        skills.skill_list,
+        mode=mode,
+        tool_description=skills.tool_description,
+        cli_description=skills.cli_description,
+    )
     updated = replace_skills_section(content, new_section)
     path.write_text(updated, encoding="utf-8")
     return path

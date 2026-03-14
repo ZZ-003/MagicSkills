@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import inspect
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from .result import ExecResult
 from .skill import Skill
@@ -18,14 +18,15 @@ from ..utils.utils import (
     skill_paths_to_skills,
 )
 
+if TYPE_CHECKING:
+    from .skillsregistry import SkillsRegistry
+
 DEFAULT_TOOL_DESCRIPTION = inspect.cleandoc(
     """
-    Unified skill tool. If you are not sure, you can first use the "listskill"
-    function of this tool to search for available skills. Then, determine which skill
-    might be the most useful. After that, try to use the read the SKILL.md file under this
-    skill path to get more detailed information. Finally, based on the content of this
-    file, decide whether to read the documentation in other paths or directly execute
-    the relevant script.
+    Unified skill tool. First use "listskill" to find relevant skills. 
+    Then use "readskill" to read the selected skill's SKILL.md or related docs. 
+    If needed, use "execskill" to run the command.
+
 
     Input format:
     {
@@ -37,6 +38,14 @@ DEFAULT_TOOL_DESCRIPTION = inspect.cleandoc(
     - listskill
     - readskill: arg = file path
     - execskill: arg = full command string
+    """
+)
+
+DEFAULT_CLI_DESCRIPTION = inspect.cleandoc(
+    """
+    Unified skill CLI. Use "magicskills listskill" to find relevant skills.
+    Then use "magicskills readskill" to read the selected skill's SKILL.md or related docs.
+    If needed, use "magicskills execskill -- <command>" to run the command.
     """
 )
 
@@ -76,6 +85,7 @@ class Skills:
         skill_list: Iterable[Skill] | None = None,
         paths: Iterable[Path | str] | None = None,
         tool_description: str | None = None,
+        cli_description: str | None = None,
         agent_md_path: Path | str | None = None,
         name: str = "all",
     ) -> None:
@@ -97,7 +107,9 @@ class Skills:
             self.skill_list = skill_paths_to_skills(self.paths)
 
         self.tool_description = tool_description or DEFAULT_TOOL_DESCRIPTION
+        self.cli_description = cli_description or DEFAULT_CLI_DESCRIPTION
         self.agent_md_path = _absolute_path(agent_md_path) if agent_md_path else _absolute_path("AGENTS.md")
+        self._registry: SkillsRegistry | None = None
 
     @property
     def skills(self) -> list[Skill]:
@@ -182,11 +194,17 @@ class Skills:
 
         command_change_tool_description(self, description)
 
-    def syncskills(self, output_path: Path | str | None = None) -> Path:
+    def change_cli_description(self, description: str) -> None:
+        """Update CLI description used in generated XML usage section."""
+        from ..command.change_cli_description import change_cli_description as command_change_cli_description
+
+        command_change_cli_description(self, description)
+
+    def syncskills(self, output_path: Path | str | None = None, mode: str = "none") -> Path:
         """Sync current skills collection into AGENTS.md content."""
         from ..command.syncskills import syncskills as command_syncskills
 
-        return command_syncskills(self, output_path)
+        return command_syncskills(self, output_path, mode=mode)
 
     def skill_tool(self, action: str, arg: str = "") -> dict[str, object]:
         """Dispatch action/arg payload for agent tool compatibility."""

@@ -21,17 +21,18 @@ from magicskills import (
 
 **导出分组**
 
-- 类型：`Skill`、`Skills`、`SkillsRegistry`
+- 类型：`Skill`、`Skills`
 - 访问器与常量：`REGISTRY`、`ALL_SKILLS()`、`DEFAULT_SKILLS_ROOT`
 - 单 skill / 执行类函数：`listskill`、`readskill`、`showskill`、`execskill`、`createskill`、`createskill_template`、`install`、`uploadskill`、`deleteskill`
 - skills 集合 / 注册表函数：`createskills`、`listskills`、`deleteskills`、`syncskills`、`loadskills`、`saveskills`
-- 描述与分发函数：`change_tool_description`、`changetooldescription`、`skill_tool`
+- 描述与分发函数：`change_tool_description`、`changetooldescription`、`change_cli_description`、`changeclidescription`、`skill_tool`
 
 **使用建议**
 
 - 如果你已经有 `Skills` 对象，优先调用实例方法，例如 `skills.readskill()`、`skills.execskill()`、`skills.syncskills()`。
 - 如果你想直接复用 CLI 同名能力，使用顶层函数更直接。
 - `changetooldescription` 是 `change_tool_description` 的兼容别名，两者等价。
+- `changeclidescription` 是 `change_cli_description` 的兼容别名，两者等价。
 
 ## 🧱 `Skill`
 
@@ -99,6 +100,7 @@ Skills(
     skill_list: Iterable[Skill] | None = None,
     paths: Iterable[Path | str] | None = None,
     tool_description: str | None = None,
+    cli_description: str | None = None,
     agent_md_path: Path | str | None = None,
     name: str = "all",
 )
@@ -109,6 +111,7 @@ Skills(
 - `skill_list`：显式传入的 `Skill` 对象列表。
 - `paths`：skills 根目录列表，或单个 skill 目录列表；构造时会自动发现其中的 skill。
 - `tool_description`：该集合的 tool 描述文本。
+- `cli_description`：供 `syncskills(mode="cli_description")` 使用的 CLI 描述文本。
 - `agent_md_path`：该集合默认同步到哪个 `AGENTS.md`。
 - `name`：集合名称，默认是 `"all"`。
 
@@ -130,7 +133,8 @@ Skills(
 - `showskill(target)`
 - `execskill(command, shell=True, timeout=None, stream=False)`
 - `change_tool_description(description)`
-- `syncskills(output_path=None)`
+- `change_cli_description(description)`
+- `syncskills(output_path=None, mode="none")`
 - `skill_tool(action, arg="")`
 
 这些实例方法和下面的同名顶层函数一一对应；如果你更偏好函数式风格，可以直接用顶层函数。
@@ -155,49 +159,9 @@ print(result.returncode, result.stdout)
 skills.syncskills()
 ```
 
-## 🗃️ `SkillsRegistry`
+## 🗃️ `SkillsRegistry`（内部类型）
 
-**使用场景**
-
-当你需要维护多个命名 skills 集合，并把这些集合持久化到某个 JSON 文件时使用。
-
-**构造签名**
-
-```python
-SkillsRegistry(store_path: Path | None = None)
-```
-
-**参数说明**
-
-- `store_path`：注册表文件路径；不传时默认使用 `~/.magicskills/collections.json`。
-
-**核心方法**
-
-- `createskills(name, skill_list=None, paths=None, tool_description=None, agent_md_path=None, save=True)`
-- `listskills()`
-- `get_skills(name)`
-- `deleteskills(name)`
-- `loadskills(path=None)`
-- `saveskills(path=None)`
-
-如果你给 `createskills()` 传 `paths`，这些路径需要先能在当前 `Allskills` 中解析成具体 skill 或 skills 根目录。
-
-**功能示例**
-
-```python
-from pathlib import Path
-from magicskills import SkillsRegistry
-
-registry = SkillsRegistry(store_path=Path("./collections.json"))
-registry.createskills(name="coder")
-print([item.name for item in registry.listskills()])
-
-coder = registry.get_skills("coder")
-print(coder.agent_md_path)
-
-registry.saveskills()
-registry.loadskills()
-```
+`SkillsRegistry` 是 `REGISTRY` 背后的内部注册表类型。现在不再允许直接实例化；命名集合管理请直接使用全局 `REGISTRY`。
 
 ## 🏷️ `REGISTRY`
 
@@ -215,6 +179,19 @@ registry.loadskills()
 from magicskills import REGISTRY
 
 print([item.name for item in REGISTRY.listskills()])
+```
+
+通过全局注册表创建并持久化集合：
+
+```python
+from magicskills import REGISTRY
+
+REGISTRY.createskills(name="coder")
+coder = REGISTRY.get_skills("coder")
+print(coder.agent_md_path)
+
+REGISTRY.saveskills()
+REGISTRY.loadskills()
 ```
 
 ## 🌐 `ALL_SKILLS()`
@@ -696,6 +673,7 @@ createskills(
     skill_list: list[Skill] | str | None = None,
     paths: list[str] | None = None,
     tool_description: str | None = None,
+    cli_description: str | None = None,
     agent_md_path: str | None = None,
 ) -> Skills
 ```
@@ -706,6 +684,7 @@ createskills(
 - `skill_list`：可直接传 `Skill` 列表；也可以传单个 skill 名称字符串。
 - `paths`：skills 根目录或 skill 目录路径字符串列表。
 - `tool_description`：集合的 tool 描述文本。
+- `cli_description`：集合的 CLI 描述文本。
 - `agent_md_path`：该集合默认同步到哪个 `AGENTS.md`。
 
 **返回值**
@@ -733,6 +712,7 @@ skills = createskills(
     "coder",
     paths=["./.claude/skills"],
     tool_description="Unified skill tool for coding tasks",
+    cli_description="Use magicskills CLI commands only",
     agent_md_path="./agents/coder/AGENTS.md",
 )
 print(skills.agent_md_path)
@@ -820,13 +800,18 @@ deleteskills("coder")
 **签名**
 
 ```python
-syncskills(skills: Skills, output_path: Path | str | None = None) -> Path
+syncskills(
+    skills: Skills,
+    output_path: Path | str | None = None,
+    mode: str = "none",
+) -> Path
 ```
 
 **参数说明**
 
 - `skills`：要同步的 `Skills` 集合。
 - `output_path`：目标文件路径；不传时使用 `skills.agent_md_path`。
+- `mode`：可选 `none`、`tool_description`、`cli_description`。
 
 **返回值**
 
@@ -851,6 +836,16 @@ from magicskills import REGISTRY, syncskills
 
 coder = REGISTRY.get_skills("coder")
 path = syncskills(coder, "./AGENTS.md")
+print(path)
+```
+
+只使用 `tool_description` 同步：
+
+```python
+from magicskills import REGISTRY, syncskills
+
+coder = REGISTRY.get_skills("coder")
+path = syncskills(coder, mode="tool_description")
 print(path)
 ```
 
@@ -952,7 +947,49 @@ changetooldescription(coder, "Unified skill tool")
 
 - 如果目标集合属于当前 `REGISTRY`，这个 API 会自动把修改持久化到注册表。
 - 这个元数据适合给外部框架或你自己的工具包装层读取。
-- 它不会改变 `syncskills()` 输出的固定 `AGENTS.md` usage 模板。
+- 只有在使用 `mode=\"tool_description\"` 时，它才会影响 `syncskills()` 的输出。
+
+## ✏️ `change_cli_description()` / `changeclidescription()`
+
+**使用场景**
+
+修改某个 `Skills` 集合上的 `cli_description` 元数据。
+
+**签名**
+
+```python
+change_cli_description(skills: Skills, description: str) -> None
+changeclidescription(skills: Skills, description: str) -> None
+```
+
+**参数说明**
+
+- `skills`：目标 `Skills` 集合。
+- `description`：新的描述文本。
+
+**功能示例**
+
+```python
+from magicskills import REGISTRY, change_cli_description
+
+coder = REGISTRY.get_skills("coder")
+change_cli_description(coder, "Use magicskills listskill, readskill, and execskill commands only")
+```
+
+用兼容别名调用：
+
+```python
+from magicskills import REGISTRY, changeclidescription
+
+coder = REGISTRY.get_skills("coder")
+changeclidescription(coder, "Use magicskills listskill/readskill/execskill only")
+```
+
+**补充说明**
+
+- 如果目标集合属于当前 `REGISTRY`，这个 API 会自动把修改持久化到注册表。
+- 这个元数据适合给面向 CLI 的包装层或你自己的运行时读取。
+- 只有在使用 `mode="cli_description"` 时，它才会影响 `syncskills()` 的输出。
 
 ## 🤖 `skill_tool()`
 

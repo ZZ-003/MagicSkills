@@ -29,7 +29,8 @@ magicskills <command> -h
 | `createskills`          | 创建一个命名 skills 集合                     | 为 agent 或团队建立独立 skill 集合                         |
 | `listskills`            | 查看所有命名 skills 集合                     | 普通文本或 JSON 输出                                       |
 | `deleteskills`          | 删除一个命名 skills 集合                     | 只删除集合注册，不删除 skill 文件                          |
-| `changetooldescription` | 修改集合的 `tool_description` 元数据       | 更新集合描述，便于后续查询与外部集成                       |
+| `changetooldescription` | 修改集合的 `tool_description` 元数据       | 更新面向 tool 的描述，便于后续查询与外部集成               |
+| `changeclidescription` | 修改集合的 `cli_description` 元数据        | 更新面向 CLI 的描述，便于后续查询与外部集成                |
 | `skill-tool`            | 以 tool function 风格调用 skill 能力         | 用统一 JSON 输出做 list/read/exec 分发                     |
 
 ## 📌 通用约定
@@ -172,13 +173,17 @@ magicskills execskill --paths ./.claude/skills ./vendor-skills -- ls -la
 **命令格式**
 
 ```bash
-magicskills syncskills <name> [-o OUTPUT] [-y]
+magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_description}] [-y]
 ```
 
 **参数说明**
 
 - `<name>`：命名 skills 集合名称。
 - `-o, --output`：输出文件路径；不传时使用该集合自己的 `agent_md_path`。
+- `--mode`：同步渲染模式。
+- `none`：保持原来的 `<usage> + <available_skills>` 结构。
+- `tool_description`：只输出 `<usage>`，内容来自集合的 `tool_description`。
+- `cli_description`：只输出 `<usage>`，内容来自集合的 `cli_description`。
 - `-y, --yes`：跳过交互确认，直接同步。
 
 **功能示例**
@@ -195,6 +200,18 @@ magicskills syncskills coder
 magicskills syncskills coder --output ./AGENTS.md
 ```
 
+只使用 `tool_description` 同步：
+
+```bash
+magicskills syncskills coder --mode tool_description
+```
+
+只使用 `cli_description` 同步：
+
+```bash
+magicskills syncskills coder --mode cli_description
+```
+
 在 CI 或脚本中跳过确认：
 
 ```bash
@@ -205,6 +222,7 @@ magicskills syncskills coder -o ./AGENTS.md -y
 
 - 如果目标文件不存在，命令会先创建文件并写入基础 `# AGENTS` 标题。
 - 如果文件里已存在 `<skills_system>` 区块，命令会替换它；否则会把新块追加到文件末尾。
+- `none` 是兼容模式，会完整保留之前的 XML 结构。
 
 ## 📦 `install`
 
@@ -461,7 +479,7 @@ magicskills showskill ./skills/demo
 **命令格式**
 
 ```bash
-magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]] [--tool-description TEXT] [--agent-md-path PATH]
+magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]] [--tool-description TEXT] [--cli-description TEXT] [--agent-md-path PATH]
 ```
 
 **参数说明**
@@ -472,6 +490,7 @@ magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]
 - 传某个 skill 目录路径，例如 `./.claude/skills/demo`
 - 传某个 skills 根目录，例如 `./.claude/skills`
 - `--tool-description`：覆盖该集合的 `tool_description` 元数据。
+- `--cli-description`：覆盖该集合的 `cli_description` 元数据。
 - `--agent-md-path`：指定该集合默认同步到哪个 `AGENTS.md` 文件。
 
 **功能示例**
@@ -518,6 +537,7 @@ magicskills createskills fullstack --paths ./.claude/skills ./vendor-skills
 magicskills createskills coder \
   --paths ./.claude/skills \
   --tool-description "Unified skill tool for coding tasks" \
+  --cli-description "Use magicskills CLI commands only" \
   --agent-md-path ./agents/coder/AGENTS.md
 ```
 
@@ -565,6 +585,7 @@ JSON 输出中每个集合对象包含：
 - `skills_count`
 - `paths`
 - `tool_description`
+- `cli_description`
 - `agent_md_path`
 
 ## 🧹 `deleteskills`
@@ -630,7 +651,43 @@ magicskills listskills --json
 补充说明：
 
 - 这会更新集合元数据。
-- 它不会改变 `syncskills` 生成的固定 `AGENTS.md` usage 模板。
+- 只有在使用 `--mode tool_description` 时，它才会影响 `syncskills` 的输出。
+
+## ✏️ `changeclidescription`
+
+**使用场景**
+
+你想调整某个命名 skills 集合上的 `cli_description` 元数据，方便后续通过 `listskills --json`、Python API 或 `syncskills --mode cli_description` 读取。
+
+**命令格式**
+
+```bash
+magicskills changeclidescription <name> <description>
+```
+
+**参数说明**
+
+- `<name>`：命名 skills 集合名称。
+- `<description>`：新的 CLI 描述文本；如果包含空格，记得加引号。
+
+**功能示例**
+
+更新描述：
+
+```bash
+magicskills changeclidescription coder "Use magicskills listskill, readskill, and execskill commands only"
+```
+
+更新后查看：
+
+```bash
+magicskills listskills --json
+```
+
+补充说明：
+
+- 这会更新集合元数据。
+- 只有在使用 `--mode cli_description` 时，它才会影响 `syncskills` 的输出。
 
 ## 🤖 `skill-tool`
 

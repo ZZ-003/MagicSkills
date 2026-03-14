@@ -20,17 +20,18 @@ from magicskills import (
 
 **Exports**
 
-- types: `Skill`, `Skills`, `SkillsRegistry`
+- types: `Skill`, `Skills`
 - accessors and constants: `REGISTRY`, `ALL_SKILLS()`, `DEFAULT_SKILLS_ROOT`
 - single-skill and execution functions: `listskill`, `readskill`, `showskill`, `execskill`, `createskill`, `createskill_template`, `install`, `uploadskill`, `deleteskill`
 - skills collection and registry functions: `createskills`, `listskills`, `deleteskills`, `syncskills`, `loadskills`, `saveskills`
-- description and dispatch functions: `change_tool_description`, `changetooldescription`, `skill_tool`
+- description and dispatch functions: `change_tool_description`, `changetooldescription`, `change_cli_description`, `changeclidescription`, `skill_tool`
 
 **Usage advice**
 
 - If you already have a `Skills` object, prefer instance methods such as `skills.readskill()`, `skills.execskill()`, and `skills.syncskills()`.
 - If you want to directly reuse CLI-equivalent capabilities, top-level functions are more direct.
 - `changetooldescription` is a compatibility alias of `change_tool_description`; they are equivalent.
+- `changeclidescription` is a compatibility alias of `change_cli_description`; they are equivalent.
 
 ## 🧱 `Skill`
 
@@ -98,6 +99,7 @@ Skills(
     skill_list: Iterable[Skill] | None = None,
     paths: Iterable[Path | str] | None = None,
     tool_description: str | None = None,
+    cli_description: str | None = None,
     agent_md_path: Path | str | None = None,
     name: str = "all",
 )
@@ -108,6 +110,7 @@ Skills(
 - `skill_list`: an explicit list of `Skill` objects
 - `paths`: a list of skills root directories, or a list of individual skill directories; skills are discovered automatically during construction
 - `tool_description`: the tool description text of this collection
+- `cli_description`: an alternate CLI-oriented description text for `syncskills(mode="cli_description")`
 - `agent_md_path`: which `AGENTS.md` file this collection should sync to by default
 - `name`: the collection name, defaulting to `"all"`
 
@@ -129,7 +132,8 @@ Skills(
 - `showskill(target)`
 - `execskill(command, shell=True, timeout=None, stream=False)`
 - `change_tool_description(description)`
-- `syncskills(output_path=None)`
+- `change_cli_description(description)`
+- `syncskills(output_path=None, mode="none")`
 - `skill_tool(action, arg="")`
 
 These instance methods map one-to-one to the top-level functions described below. If you prefer a functional style, you can use the top-level functions directly.
@@ -154,49 +158,9 @@ print(result.returncode, result.stdout)
 skills.syncskills()
 ```
 
-## 🗃️ `SkillsRegistry`
+## 🗃️ `SkillsRegistry` (Internal)
 
-**Use case**
-
-Use this when you need to manage multiple named skills collections and persist them into a JSON file.
-
-**Constructor signature**
-
-```python
-SkillsRegistry(store_path: Path | None = None)
-```
-
-**Parameters**
-
-- `store_path`: the registry file path; if omitted, it defaults to `~/.magicskills/collections.json`
-
-**Core methods**
-
-- `createskills(name, skill_list=None, paths=None, tool_description=None, agent_md_path=None, save=True)`
-- `listskills()`
-- `get_skills(name)`
-- `deleteskills(name)`
-- `loadskills(path=None)`
-- `saveskills(path=None)`
-
-If you pass `paths` into `createskills()`, those paths must already be resolvable in the current `Allskills` as concrete skills or skills root directories.
-
-**Examples**
-
-```python
-from pathlib import Path
-from magicskills import SkillsRegistry
-
-registry = SkillsRegistry(store_path=Path("./collections.json"))
-registry.createskills(name="coder")
-print([item.name for item in registry.listskills()])
-
-coder = registry.get_skills("coder")
-print(coder.agent_md_path)
-
-registry.saveskills()
-registry.loadskills()
-```
+`SkillsRegistry` is the internal registry type behind `REGISTRY`. Direct instantiation is disabled. Use the global `REGISTRY` singleton for named collection management.
 
 ## 🏷️ `REGISTRY`
 
@@ -214,6 +178,19 @@ None. It is a ready-made object and does not need to be instantiated.
 from magicskills import REGISTRY
 
 print([item.name for item in REGISTRY.listskills()])
+```
+
+Create and persist a collection through the global registry:
+
+```python
+from magicskills import REGISTRY
+
+REGISTRY.createskills(name="coder")
+coder = REGISTRY.get_skills("coder")
+print(coder.agent_md_path)
+
+REGISTRY.saveskills()
+REGISTRY.loadskills()
 ```
 
 ## 🌐 `ALL_SKILLS()`
@@ -695,6 +672,7 @@ createskills(
     skill_list: list[Skill] | str | None = None,
     paths: list[str] | None = None,
     tool_description: str | None = None,
+    cli_description: str | None = None,
     agent_md_path: str | None = None,
 ) -> Skills
 ```
@@ -705,6 +683,7 @@ createskills(
 - `skill_list`: may be a list of `Skill` objects, or a single skill name string
 - `paths`: a list of skills root paths or individual skill directory paths
 - `tool_description`: the tool description text of the collection
+- `cli_description`: the CLI description text of the collection
 - `agent_md_path`: which `AGENTS.md` this collection should sync to by default
 
 **Return value**
@@ -732,6 +711,7 @@ skills = createskills(
     "coder",
     paths=["./.claude/skills"],
     tool_description="Unified skill tool for coding tasks",
+    cli_description="Use magicskills CLI commands only",
     agent_md_path="./agents/coder/AGENTS.md",
 )
 print(skills.agent_md_path)
@@ -819,13 +799,18 @@ Sync a `Skills` collection into an `AGENTS.md` file.
 **Signature**
 
 ```python
-syncskills(skills: Skills, output_path: Path | str | None = None) -> Path
+syncskills(
+    skills: Skills,
+    output_path: Path | str | None = None,
+    mode: str = "none",
+) -> Path
 ```
 
 **Parameters**
 
 - `skills`: the `Skills` collection to sync
 - `output_path`: the target file path; if omitted, `skills.agent_md_path` is used
+- `mode`: one of `none`, `tool_description`, or `cli_description`
 
 **Return value**
 
@@ -850,6 +835,16 @@ from magicskills import REGISTRY, syncskills
 
 coder = REGISTRY.get_skills("coder")
 path = syncskills(coder, "./AGENTS.md")
+print(path)
+```
+
+Sync using only `tool_description`:
+
+```python
+from magicskills import REGISTRY, syncskills
+
+coder = REGISTRY.get_skills("coder")
+path = syncskills(coder, mode="tool_description")
 print(path)
 ```
 
@@ -951,7 +946,49 @@ changetooldescription(coder, "Unified skill tool")
 
 - If the target collection belongs to the current `REGISTRY`, this API automatically persists the modification into the registry.
 - This metadata is suitable for external frameworks or your own wrapper layer to read.
-- It does not change the fixed `AGENTS.md` usage template produced by `syncskills()`.
+- It affects `syncskills()` output only when you use `mode="tool_description"`.
+
+## ✏️ `change_cli_description()` / `changeclidescription()`
+
+**Use case**
+
+Modify the `cli_description` metadata on a `Skills` collection.
+
+**Signature**
+
+```python
+change_cli_description(skills: Skills, description: str) -> None
+changeclidescription(skills: Skills, description: str) -> None
+```
+
+**Parameters**
+
+- `skills`: the target `Skills` collection
+- `description`: the new description text
+
+**Examples**
+
+```python
+from magicskills import REGISTRY, change_cli_description
+
+coder = REGISTRY.get_skills("coder")
+change_cli_description(coder, "Use magicskills listskill, readskill, and execskill commands only")
+```
+
+Call through the compatibility alias:
+
+```python
+from magicskills import REGISTRY, changeclidescription
+
+coder = REGISTRY.get_skills("coder")
+changeclidescription(coder, "Use magicskills listskill/readskill/execskill only")
+```
+
+**Notes**
+
+- If the target collection belongs to the current `REGISTRY`, this API automatically persists the modification into the registry.
+- This metadata is suitable for CLI-oriented wrappers or your own runtime layer to read.
+- It affects `syncskills()` output only when you use `mode="cli_description"`.
 
 ## 🤖 `skill_tool()`
 

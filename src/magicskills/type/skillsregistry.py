@@ -14,6 +14,7 @@ from ..utils.utils import skill_paths_from_skills, skill_paths_to_skills
 REGISTRY_DIRNAME = ".magicskills"
 REGISTRY_FILENAME = "collections.json"
 ALL_SKILLS_NAME = "Allskills"
+_REGISTRY_INIT_TOKEN = object()
 
 
 def _default_store_path() -> Path:
@@ -24,7 +25,9 @@ def _default_store_path() -> Path:
 class SkillsRegistry:
     """Named Skills collection registry with JSON persistence."""
 
-    def __init__(self, store_path: Path | None = None) -> None:
+    def __init__(self, store_path: Path | None = None, *, _init_token: object | None = None) -> None:
+        if _init_token is not _REGISTRY_INIT_TOKEN:
+            raise RuntimeError("SkillsRegistry is internal. Use the global REGISTRY singleton instead.")
         self._instances: dict[str, Skills] = {}
         self._store_path = (store_path or _default_store_path()).expanduser()
         self.loadskills()
@@ -33,7 +36,9 @@ class SkillsRegistry:
     def _ensure_default_instance(self) -> None:
         """Ensure built-in `Allskills` collection always exists in registry."""
         if ALL_SKILLS_NAME not in self._instances:
-            self._instances[ALL_SKILLS_NAME] = Skills(name=ALL_SKILLS_NAME)
+            instance = Skills(name=ALL_SKILLS_NAME)
+            instance._registry = self
+            self._instances[ALL_SKILLS_NAME] = instance
 
     def _allskills_instance(self) -> Skills:
         """Return the built-in `Allskills` collection, creating it when missing."""
@@ -75,6 +80,7 @@ class SkillsRegistry:
             collections[name] = {
                 "paths": [str(path) for path in instance.paths],
                 "tool_description": instance.tool_description,
+                "cli_description": instance.cli_description,
                 "agent_md_path": str(instance.agent_md_path),
             }
         return {"collections": collections}
@@ -108,12 +114,14 @@ class SkillsRegistry:
             for name, spec in ordered_items:
                 path_values = spec.get("paths", [])
                 tool_description = spec.get("tool_description")
+                cli_description = spec.get("cli_description")
                 agent_md_path = spec.get("agent_md_path")
                 paths = path_values if isinstance(path_values, list) else None
                 self.createskills(
                     name=name,
                     paths=paths,
                     tool_description=tool_description if isinstance(tool_description, str) else None,
+                    cli_description=cli_description if isinstance(cli_description, str) else None,
                     agent_md_path=agent_md_path if isinstance(agent_md_path, str) else None,
                     save=False,
                 )
@@ -138,6 +146,7 @@ class SkillsRegistry:
         skill_list: Iterable[Skill] | str | None = None,
         paths: Iterable[str] | None = None,
         tool_description: str | None = None,
+        cli_description: str | None = None,
         agent_md_path: str | None = None,
         save: bool = True,
     ) -> Skills:
@@ -150,6 +159,7 @@ class SkillsRegistry:
                 instance = Skills(
                     name=name,
                     tool_description=tool_description,
+                    cli_description=cli_description,
                     agent_md_path=agent_md_path,
                 )
             else:
@@ -182,6 +192,7 @@ class SkillsRegistry:
                     skill_list=discovered,
                     paths=skill_paths_from_skills(discovered),
                     tool_description=tool_description,
+                    cli_description=cli_description,
                     agent_md_path=agent_md_path,
                 )
         else:
@@ -195,9 +206,11 @@ class SkillsRegistry:
                 skill_list=provided_skills,
                 paths=skill_paths_from_skills(provided_skills),
                 tool_description=tool_description,
+                cli_description=cli_description,
                 agent_md_path=agent_md_path,
             )
 
+        instance._registry = self
         self._instances[name] = instance
         if save:
             self.saveskills()
@@ -222,7 +235,7 @@ class SkillsRegistry:
         del self._instances[name]
         self.saveskills()
 
-REGISTRY = SkillsRegistry()
+REGISTRY = SkillsRegistry(_init_token=_REGISTRY_INIT_TOKEN)
 
 
 def ALL_SKILLS() -> Skills:

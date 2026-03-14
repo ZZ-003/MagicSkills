@@ -80,7 +80,7 @@ The core model is simple:
 - `Skill`: one concrete skill directory
 - `ALL_SKILLS()`: access the current built-in `Allskills` view
 - `Skills`: the subset an agent or workflow actually uses
-- `SkillsRegistry`: named collections persisted across runs
+- `REGISTRY`: the global named-collection registry persisted across runs
 
 MagicSkills is most useful when:
 
@@ -236,7 +236,7 @@ The core of MagicSkills is not "a pile of commands", but a stable three-layer mo
 
 - `Skill`: describes one skill directory and its metadata
 - `Skills`: describes an operable collection of skills
-- `SkillsRegistry`: describes how multiple named `Skills` collections are registered, loaded, and persisted
+- the global registry layer centered on `REGISTRY`: describes how multiple named `Skills` collections are registered, loaded, and persisted
 
 CLI and Python API are just different entry points to these three layers. Whether you call `readskill`, `install`, `syncskills`, or `skill_tool`, everything eventually goes through the same core objects and command implementations.
 
@@ -246,7 +246,7 @@ From the recommended runtime workflow, MagicSkills is closest to the following c
 2. During installation, MagicSkills scans those skill directories, parses `SKILL.md` frontmatter, and constructs `Skill` objects
 3. All installed and discovered skills are first aggregated into the built-in `Allskills` view
 4. Then you select a subset from that view through `ALL_SKILLS()` or `REGISTRY.get_skills("Allskills")` and compose a specific `Skills` collection for an agent
-5. Finally, that named `Skills` collection is registered into `SkillsRegistry`, optionally persisted, and synced to `AGENTS.md`
+5. Finally, that named `Skills` collection is registered into `REGISTRY`, optionally persisted, and synced to `AGENTS.md`
 
 ## 🧱 Skill Layer
 
@@ -302,7 +302,9 @@ Once constructed, the collection exposes a unified set of higher-level capabilit
 - `execskill(command, ...)`: run a command and return a structured result
 - `uploadskill(target)`: upload a skill through the default repository workflow
 - `deleteskill(target)`: remove a skill from the collection; when applied to `Allskills`, it also removes the on-disk directory
-- `syncskills(output_path=None)`: write the collection into `AGENTS.md`
+- `change_tool_description(description)`: update the collection's tool-oriented description
+- `change_cli_description(description)`: update the collection's CLI-oriented description
+- `syncskills(output_path=None, mode="none")`: write the collection into `AGENTS.md`
 - `skill_tool(action, arg="")`: dispatch list/read/exec in a tool-function style
 
 There are two key design points in this layer:
@@ -314,7 +316,7 @@ One important detail: `execskill()` runs commands in the current process working
 
 ## 🗃️ Registry Persistence Layer
 
-The `SkillsRegistry` layer solves the problem of saving and restoring multiple named skills collections.
+The global registry layer centered on `REGISTRY` solves the problem of saving and restoring multiple named skills collections.
 
 Its responsibilities include:
 
@@ -333,6 +335,7 @@ What is stored there is not the full file contents of each skill, but only the m
 
 - `paths`
 - `tool_description`
+- `cli_description`
 - `agent_md_path`
 
 In other words, the Registry stores "collection configuration" and "skill path references", not full copies of skill contents. The actual skill content remains in the filesystem.
@@ -344,7 +347,7 @@ The typical workflow for this layer is:
 3. Restore those collections with `loadskills`, or through default loading on process startup
 4. Sync a specific collection to the target `AGENTS.md` with `syncskills`
 
-So in essence, the Registry layer is the project-level configuration center of MagicSkills. `Skill` defines a single item, `Skills` organizes a working set, and `SkillsRegistry` makes those collections survive across different runtime cycles.
+So in essence, the Registry layer is the project-level configuration center of MagicSkills. `Skill` defines a single item, `Skills` organizes a working set, and `REGISTRY` makes those collections survive across different runtime cycles.
 
 <a id="cli-en"></a>
 # 🛠️ CLI
@@ -366,7 +369,8 @@ Chinese version: [doc/cli.zh-CN.md](./doc/cli.zh-CN.md).
 | `createskills`            | Create a named skills collection                       | Build an isolated skill set for an agent or team               |
 | `listskills`              | List all named skills collections                      | Human-readable output or JSON output                            |
 | `deleteskills`            | Delete a named skills collection                       | Delete only the collection registration, not the skill files    |
-| `changetooldescription`   | Modify the collection's `tool_description` metadata    | Update collection description for later querying and integration |
+| `changetooldescription`   | Modify the collection's `tool_description` metadata    | Update tool-oriented description for later querying and integration |
+| `changeclidescription`    | Modify the collection's `cli_description` metadata     | Update CLI-oriented description for later querying and integration |
 | `skill-tool`              | Invoke skill capabilities in a tool-function style     | Use unified JSON output to dispatch list/read/exec              |
 
 <a id="python-api-en"></a>
@@ -393,17 +397,18 @@ from magicskills import (
 
 **Exports**
 
-- types: `Skill`, `Skills`, `SkillsRegistry`
+- types: `Skill`, `Skills`
 - accessors and constants: `REGISTRY`, `ALL_SKILLS()`, `DEFAULT_SKILLS_ROOT`
 - single-skill and execution functions: `listskill`, `readskill`, `showskill`, `execskill`, `createskill`, `createskill_template`, `install`, `uploadskill`, `deleteskill`
 - skills collection and registry functions: `createskills`, `listskills`, `deleteskills`, `syncskills`, `loadskills`, `saveskills`
-- description and dispatch functions: `change_tool_description`, `changetooldescription`, `skill_tool`
+- description and dispatch functions: `change_tool_description`, `changetooldescription`, `change_cli_description`, `changeclidescription`, `skill_tool`
 
 **Usage advice**
 
 - If you already have a `Skills` object, prefer instance methods such as `skills.readskill()`, `skills.execskill()`, and `skills.syncskills()`.
 - If you want to directly reuse CLI-equivalent capabilities, top-level functions are more direct.
 - `changetooldescription` is a compatibility alias of `change_tool_description`; they are equivalent.
+- `changeclidescription` is a compatibility alias of `change_cli_description`; they are equivalent.
 
 <a id="tips-en"></a>
 # 💡 Tips

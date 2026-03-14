@@ -11,6 +11,7 @@ from ..type.skill import Skill
 SKILL_REGEX = re.compile(r"<skill>[\s\S]*?<name>([^<]+)</name>[\s\S]*?</skill>")
 SKILLS_TABLE_START = "<!-- SKILLS_TABLE_START -->"
 SKILLS_TABLE_END = "<!-- SKILLS_TABLE_END -->"
+SYNC_MODES = ("none", "tool_description", "cli_description")
 
 
 def parse_current_skills(content: str) -> list[str]:
@@ -30,9 +31,39 @@ def _extract_marker_body(section: str) -> str | None:
     return match.group(1).strip("\n")
 
 
-def generate_skills_xml(skills: Iterable[Skill], invocation: str) -> str:
+def _generate_usage_only_xml(description: str) -> str:
+    """Generate one usage-only `<skills_system>` XML block."""
+    usage_body = description.strip()
+    return (
+        "<skills_system priority=\"1\">\n\n"
+        f"{SKILLS_TABLE_START}\n"
+        "<usage>\n"
+        f"{usage_body}\n"
+        "</usage>\n"
+        f"{SKILLS_TABLE_END}\n\n"
+        "</skills_system>"
+    )
+
+
+def generate_skills_xml(
+    skills: Iterable[Skill],
+    *,
+    mode: str = "none",
+    tool_description: str | None = None,
+    cli_description: str | None = None,
+) -> str:
     """Generate the `<skills_system>` XML block for AGENTS.md."""
-    _ = invocation
+    if mode not in SYNC_MODES:
+        raise ValueError(f"Unsupported sync mode: {mode}")
+    if mode == "tool_description":
+        if tool_description is None:
+            raise ValueError("sync mode 'tool_description' requires tool_description")
+        return _generate_usage_only_xml(tool_description)
+    if mode == "cli_description":
+        if cli_description is None:
+            raise ValueError("sync mode 'cli_description' requires cli_description")
+        return _generate_usage_only_xml(cli_description)
+
     skill_tags = []
     for skill in skills:
         skill_tags.append(
@@ -51,12 +82,8 @@ def generate_skills_xml(skills: Iterable[Skill], invocation: str) -> str:
         "<usage>\n"
         "When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.\n\n"
         "How to use skills:\n"
-        'Unified skill cli. If you are not sure, you can first use "magicskills listskill " '
-        "to search for available skills. Then, determine which skill might be the most useful. "
-        'After that, try to use "magicskills readskill <path>" to read the SKILL.md file under '
-        "this skill path to get more detailed information. Finally, based on the content of this "
-        'file, decide whether to read the documentation in other paths or use '
-        '"magicskills execskill <command>" to directly execute the relevant script.\n\n'
+        'If you are not sure, you can First, read the SKILL.md file in the corresponding path of the skill. '
+        'Then, based on its content, further determine how to use it.\n\n'
         "Usage notes:\n"
         "- Only use skills listed in <available_skills> below\n"
         "- Do not invoke a skill that is already loaded in your context\n"

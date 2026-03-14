@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Iterable
 
 from .command.install import install
+from .command.change_cli_description import change_cli_description as command_change_cli_description
 from .command.createskill import createskill as command_createskill
 from .command.createskill_template import createskill_template as command_createskill_template
 from .command.change_tool_description import change_tool_description as command_change_tool_description
@@ -36,6 +37,7 @@ from .command.deleteskill import deleteskill as command_deleteskill
 from .command.saveskills import saveskills as command_saveskills
 from .type.skillsregistry import ALL_SKILLS, REGISTRY
 from .type.skills import Skills
+from .utils.agents_md import SYNC_MODES
 from .utils.utils import normalize_paths
 
 
@@ -210,6 +212,14 @@ def _skills_from_paths(paths: list[Path] | None) -> Skills:
     return Skills(paths=paths) if paths else ALL_SKILLS()
 
 
+def _registered_skills_or_exit(name: str) -> Skills:
+    """Return one registered collection or exit with a CLI-friendly message."""
+    try:
+        return REGISTRY.get_skills(name)
+    except KeyError as exc:
+        raise SystemExit(str(exc)) from exc
+
+
 def _serialize_skills_instances(instances: list[Skills]) -> list[dict[str, object]]:
     """Convert named skills collections into JSON-safe payload."""
     payload = []
@@ -220,6 +230,7 @@ def _serialize_skills_instances(instances: list[Skills]) -> list[dict[str, objec
                 "skills_count": len(instance.skills),
                 "paths": [str(path) for path in instance.paths],
                 "tool_description": instance.tool_description,
+                "cli_description": instance.cli_description,
                 "agent_md_path": str(instance.agent_md_path),
             }
         )
@@ -251,15 +262,19 @@ def _print_skills_instances(instances: list[Skills], *, json_output: bool) -> No
         name = instance.name
         count = len(instance.skills)
         total_skills += count
-        description = inspect.cleandoc(instance.tool_description or "")
-        description_lines = description.splitlines() or ["(none)"]
+        tool_description = inspect.cleandoc(instance.tool_description or "")
+        tool_description_lines = tool_description.splitlines() or ["(none)"]
+        cli_description = inspect.cleandoc(instance.cli_description or "")
+        cli_description_lines = cli_description.splitlines() or ["(none)"]
         rows = [
             f"- name: {name}",
             f"skills: {count}",
             f"agent_md_path: {instance.agent_md_path}",
             f"paths: {', '.join(str(path) for path in instance.paths) if instance.paths else '(none)'}",
-            f"tool_description: {description_lines[0]}",
-            *[f"  {line}" for line in description_lines[1:]],
+            f"tool_description: {tool_description_lines[0]}",
+            *[f"  {line}" for line in tool_description_lines[1:]],
+            f"cli_description: {cli_description_lines[0]}",
+            *[f"  {line}" for line in cli_description_lines[1:]],
         ]
         sections.append("")
         sections.extend(_boxed_lines(f"Collection {name}", rows, width=width, style="1;33", color=color))
@@ -344,13 +359,13 @@ def cmd_exec(args: argparse.Namespace) -> int:
 
 def cmd_sync(args: argparse.Namespace) -> int:
     """Sync skills XML section into AGENTS.md (or custom output)."""
-    skills = REGISTRY.get_skills(args.name)
+    skills = _registered_skills_or_exit(args.name)
     if not args.yes:
         confirm = input(f"Sync {len(skills.skills)} skills to {args.output or skills.agent_md_path}? [y/N] ")
         if confirm.strip().lower() not in {"y", "yes"}:
             print("Cancelled.")
             return 1
-    output = command_syncskills(skills, args.output)
+    output = command_syncskills(skills, args.output, mode=args.mode)
     print(f"Synced to {output}")
     return 0
 
@@ -452,6 +467,7 @@ def cmd_create_skills(args: argparse.Namespace) -> int:
         skill_list=skill_list,
         paths=path_values,
         tool_description=args.tool_description,
+        cli_description=args.cli_description,
         agent_md_path=args.agent_md_path,
     )
     print(f"Created skills instance: {instance.name}")
@@ -488,16 +504,24 @@ def cmd_save_skills(args: argparse.Namespace) -> int:
 
 def cmd_change_tool_description(args: argparse.Namespace) -> int:
     """Update tool description for a named collection."""
-    instance = REGISTRY.get_skills(args.name)
+    instance = _registered_skills_or_exit(args.name)
     command_change_tool_description(instance, args.description)
     print(f"Updated tool description for skills instance: {args.name}")
+    return 0
+
+
+def cmd_change_cli_description(args: argparse.Namespace) -> int:
+    """Update CLI description for a named collection."""
+    instance = _registered_skills_or_exit(args.name)
+    command_change_cli_description(instance, args.description)
+    print(f"Updated CLI description for skills instance: {args.name}")
     return 0
 
 
 def cmd_skill_tool(args: argparse.Namespace) -> int:
     """Run skill_tool compatible action from CLI."""
     if args.name:
-        skills = REGISTRY.get_skills(args.name)
+        skills = _registered_skills_or_exit(args.name)
     else:
         skills = ALL_SKILLS()
     result = command_skill_tool(skills, args.action, args.arg)
@@ -527,6 +551,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync = sub.add_parser("syncskills", help="Sync skills into AGENTS.md")
     p_sync.add_argument("name", help="Skills instance name")
     p_sync.add_argument("-o", "--output", help="Output path (default: AGENTS.md)")
+    p_sync.add_argument(
+        "--mode",
+        default="none",
+        choices=SYNC_MODES,
+        help="Sync mode: keep original skills block, or render only one description field",
+    )
     p_sync.add_argument("-y", "--yes", action="store_true", help="Non-interactive")
     p_sync.set_defaults(func=cmd_sync)
 
@@ -573,6 +603,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_create_skills.add_argument("--paths", nargs="*", help="Custom paths for this collection")
     p_create_skills.add_argument("--tool-description", help="Tool description override")
+    p_create_skills.add_argument("--cli-description", help="CLI description override")
     p_create_skills.add_argument("--agent-md-path", help="AGENTS.md path override")
     p_create_skills.set_defaults(func=cmd_create_skills)
 
@@ -598,6 +629,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_change_desc.add_argument("name", help="Skills instance name")
     p_change_desc.add_argument("description", help="New tool description")
     p_change_desc.set_defaults(func=cmd_change_tool_description)
+
+    p_change_cli_desc = sub.add_parser("changeclidescription", help="Update CLI description on a skills collection")
+    p_change_cli_desc.add_argument("name", help="Skills instance name")
+    p_change_cli_desc.add_argument("description", help="New CLI description")
+    p_change_cli_desc.set_defaults(func=cmd_change_cli_description)
 
     p_tool = sub.add_parser("skill-tool", help="Run skill_tool action")
     p_tool.add_argument("action", help="Action name")

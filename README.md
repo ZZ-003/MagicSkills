@@ -141,6 +141,15 @@ magicskills install anthropics/skills
 
 By default, installed skills are copied into `./.claude/skills/` and then become discoverable from the built-in `Allskills` view.
 
+If you downloaded a skill bundle as a non-GitHub `.zip`, unzip it first and then install the extracted local directory:
+
+```bash
+unzip vendor-skills.zip -d ./tmp/vendor-skills
+magicskills install ./tmp/vendor-skills
+```
+
+If the archive contains only one skill directory, you can also install that extracted directory directly.
+
 ### 3. 🧩 Create One Agent Collection
 
 ```bash

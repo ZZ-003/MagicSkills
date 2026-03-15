@@ -141,6 +141,15 @@ magicskills install anthropics/skills
 
 默认情况下，安装的 skill 会被复制到 `./.claude/skills/`，随后就能在内置的 `Allskills` 视图中被发现。
 
+如果你是从非 GitHub 的页面、对象存储或内部文件服务下载的 `.zip`，先解压，再把解压后的本地目录传给 `install`：
+
+```bash
+unzip vendor-skills.zip -d ./tmp/vendor-skills
+magicskills install ./tmp/vendor-skills
+```
+
+如果压缩包里只有一个 skill 目录，也可以在解压后直接安装那个目录。
+
 ### 3. 🧩 创建一个 Agent 集合
 
 ```bash

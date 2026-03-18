@@ -19,6 +19,7 @@ Actions:
 - listskill
 - readskill: arg = file path
 - execskill: arg = full command string
+- createdocx: arg = document content or template name
 </usage>
 <!-- SKILLS_TABLE_END -->
 

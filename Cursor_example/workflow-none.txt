@@ -1,4 +1,4 @@
-请你阅读当前目录下的AGENTS.md文件，生成一份你的自我介绍，保存在 .docx 文档中
+aider 请你阅读当前目录下的AGENTS.md文件，生成一份你的自我介绍，保存在 .docx 文档中
 
 generate_self_intro_docx.js(new)
 +178

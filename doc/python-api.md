@@ -810,13 +810,12 @@ syncskills(
 
 - `skills`: the `Skills` collection to sync
 - `output_path`: the target file path; if omitted, `skills.agent_md_path` is used
-- `mode`: one of `none`, `tool_description`, or `cli_description`
+- `mode`: one of `none` or `cli_description`
 
 **How to choose the mode**
 
-- `none`: use this when the target runtime should receive the explicit list of available skills in `AGENTS.md`
-- `tool_description`: use this when the target runtime should receive tool-oriented usage guidance instead of the embedded skills table
-- `cli_description`: use this when the target runtime should receive CLI-oriented usage guidance instead of the embedded skills table
+- `none`: use this when the agent reads `AGENTS.md` and already has its own native skill implementation, so the explicit skill list should be preserved
+- `cli_description`: use this when the agent reads `AGENTS.md` but does not have native skill support enabled, so it should be guided toward `magicskills` CLI commands
 
 **Return value**
 
@@ -841,16 +840,6 @@ from magicskills import REGISTRY, syncskills
 
 coder = REGISTRY.get_skills("coder")
 path = syncskills(coder, "./AGENTS.md")
-print(path)
-```
-
-Sync using only `tool_description`:
-
-```python
-from magicskills import REGISTRY, syncskills
-
-coder = REGISTRY.get_skills("coder")
-path = syncskills(coder, mode="tool_description")
 print(path)
 ```
 
@@ -962,7 +951,7 @@ changetooldescription(coder, "Unified skill tool")
 
 - If the target collection belongs to the current `REGISTRY`, this API automatically persists the modification into the registry.
 - This metadata is suitable for external frameworks or your own wrapper layer to read.
-- It affects `syncskills()` output only when you use `mode="tool_description"`.
+- It no longer affects `syncskills()` output.
 
 ## ✏️ `change_cli_description()` / `changeclidescription()`
 
@@ -988,7 +977,10 @@ changeclidescription(skills: Skills, description: str) -> None
 from magicskills import REGISTRY, change_cli_description
 
 coder = REGISTRY.get_skills("coder")
-change_cli_description(coder, "Use magicskills listskill, readskill, and execskill commands only")
+change_cli_description(
+    coder,
+    'Unified skill CLI tool. Use "magicskills skill-tool listskill --name {skills_name}" to find relevant skills.',
+)
 ```
 
 Call through the compatibility alias:
@@ -997,7 +989,7 @@ Call through the compatibility alias:
 from magicskills import REGISTRY, changeclidescription
 
 coder = REGISTRY.get_skills("coder")
-changeclidescription(coder, "Use magicskills listskill/readskill/execskill only")
+changeclidescription(coder, 'Use "magicskills skill-tool listskill --name {skills_name}" first')
 ```
 
 **Notes**

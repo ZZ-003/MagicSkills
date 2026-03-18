@@ -49,22 +49,23 @@ The examples below assume `bash/zsh`; if you use PowerShell, adjust quoting and 
 
 **Use case**
 
-You want a quick view of which skills are already registered in the current `Allskills`, along with each skill's basic description.
+You want a quick view of which skills are already registered in the current `Allskills`, or inside one named skills collection, along with each skill's basic description.
 
 **Command format**
 
 ```bash
-magicskills listskill
+magicskills listskill [--name <collection-name>]
 ```
 
 **Parameters**
 
-None.
+- `--name <collection-name>`: list skills from one named skills collection shown by `magicskills listskills`; when omitted, `Allskills` is used.
 
 **Examples**
 
 ```bash
 magicskills listskill
+magicskills listskill --name coder
 ```
 
 The output lists each skill in order with:
@@ -172,7 +173,7 @@ You have already created a named skills collection and want to sync it into an `
 **Command format**
 
 ```bash
-magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_description}] [-y]
+magicskills syncskills <name> [-o OUTPUT] [--mode {none,cli_description}] [-y]
 ```
 
 **Parameters**
@@ -181,15 +182,13 @@ magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_des
 - `-o, --output`: output file path; if omitted, the collection's own `agent_md_path` is used
 - `--mode`: sync rendering mode
 - `none`: keep the original `<usage> + <available_skills>` layout
-- `tool_description`: write only `<usage>` using the collection's `tool_description`
 - `cli_description`: write only `<usage>` using the collection's `cli_description`
 - `-y, --yes`: skip interactive confirmation and sync immediately
 
 **How to choose the mode**
 
-- `none`: use this when the target runtime should receive the explicit list of available skills inside `AGENTS.md`
-- `tool_description`: use this when the target runtime should see tool-oriented usage guidance instead of the embedded skills table
-- `cli_description`: use this when the target runtime should see CLI-oriented usage guidance instead of the embedded skills table
+- `none`: use this when the agent reads `AGENTS.md` and already has its own native skill implementation, so the explicit skill list should be preserved
+- `cli_description`: use this when the agent reads `AGENTS.md` but does not have native skill support enabled, so it should be guided toward `magicskills` CLI commands
 
 **Examples**
 
@@ -203,12 +202,6 @@ Sync to a specific file:
 
 ```bash
 magicskills syncskills coder --output ./AGENTS.md
-```
-
-Sync using only `tool_description`:
-
-```bash
-magicskills syncskills coder --mode tool_description
 ```
 
 Sync using only `cli_description`:
@@ -656,7 +649,7 @@ magicskills listskills --json
 Notes:
 
 - This updates collection metadata.
-- It affects `syncskills` output only when you use `--mode tool_description`.
+- It does not affect `syncskills` output anymore; keep using it for external frameworks or your own wrapper layer.
 
 ## ✏️ `changeclidescription`
 
@@ -680,7 +673,7 @@ magicskills changeclidescription <name> <description>
 Update the description:
 
 ```bash
-magicskills changeclidescription coder "Use magicskills listskill, readskill, and execskill commands only"
+magicskills changeclidescription coder "Unified skill CLI tool. Use magicskills skill-tool listskill --name coder first."
 ```
 
 View it after updating:
@@ -724,6 +717,12 @@ List skills in the default collection:
 
 ```bash
 magicskills skill-tool listskill
+```
+
+List skills in a named collection:
+
+```bash
+magicskills skill-tool listskill --name coder
 ```
 
 Read a skill inside a named collection:

@@ -11,7 +11,7 @@ from ..type.skill import Skill
 SKILL_REGEX = re.compile(r"<skill>[\s\S]*?<name>([^<]+)</name>[\s\S]*?</skill>")
 SKILLS_TABLE_START = "<!-- SKILLS_TABLE_START -->"
 SKILLS_TABLE_END = "<!-- SKILLS_TABLE_END -->"
-SYNC_MODES = ("none", "tool_description", "cli_description")
+SYNC_MODES = ("none", "cli_description")
 
 
 def parse_current_skills(content: str) -> list[str]:
@@ -55,10 +55,6 @@ def generate_skills_xml(
     """Generate the `<skills_system>` XML block for AGENTS.md."""
     if mode not in SYNC_MODES:
         raise ValueError(f"Unsupported sync mode: {mode}")
-    if mode == "tool_description":
-        if tool_description is None:
-            raise ValueError("sync mode 'tool_description' requires tool_description")
-        return _generate_usage_only_xml(tool_description)
     if mode == "cli_description":
         if cli_description is None:
             raise ValueError("sync mode 'cli_description' requires cli_description")

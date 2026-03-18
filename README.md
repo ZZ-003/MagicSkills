@@ -168,17 +168,15 @@ This means:
 magicskills syncskills agent1_skills
 ```
 
-`syncskills` supports three `AGENTS.md` sync modes:
+`syncskills` supports two `AGENTS.md` sync modes:
 
-- `none`: keep the standard `<usage> + <available_skills>` structure; use this when the runtime should see the explicit skill list
-- `tool_description`: write only `<usage>` using the collection's `tool_description`; use this when you want `AGENTS.md` to describe a tool-oriented invocation contract instead of embedding the skill table
-- `cli_description`: write only `<usage>` using the collection's `cli_description`; use this when you want `AGENTS.md` to guide the runtime toward `magicskills` CLI commands
+- `none`: keep the standard `<usage> + <available_skills>` structure; use this when the agent reads `AGENTS.md` and already has its own native skill implementation
+- `cli_description`: write only `<usage>` using the collection's `cli_description`; use this when the agent reads `AGENTS.md` but does not have native skill support enabled, so it should be guided toward `magicskills` CLI commands
 
 Examples:
 
 ```bash
 magicskills syncskills agent1_skills --mode none
-magicskills syncskills agent1_skills --mode tool_description
 magicskills syncskills agent1_skills --mode cli_description
 ```
 
@@ -452,7 +450,7 @@ The recommended flow is:
 2. Use `createskills` to create a named collection that contains only a subset of skills
 3. Use `syncskills` to write that collection into the target `AGENTS.md`
 4. Choose the sync mode based on the target runtime:
-   `none` for explicit skill list injection, `tool_description` for tool-oriented guidance, `cli_description` for CLI-oriented guidance
+   `none` when the agent reads `AGENTS.md` and already has its own skill system, `cli_description` when the agent reads `AGENTS.md` but needs CLI-oriented guidance instead
 5. Let the agent read only that target `AGENTS.md`
 
 Example:

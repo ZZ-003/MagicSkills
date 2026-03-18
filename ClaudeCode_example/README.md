@@ -27,7 +27,7 @@
 
 ### 生成 AGETNS.md
 
-执行 `magicskills syncskills claudecode --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
+执行 `magicskills syncskills claudecode --mode cli_description --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
 
 ```markdown
@@ -35,35 +35,12 @@
 
 <skills_system priority="1">
 
-## Available Skills
-
 <!-- SKILLS_TABLE_START -->
 <usage>
-When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.
-
-How to use skills:
-Unified skill cli. If you are not sure, you can first use "magicskills listskill" to search for available skills. Then, determine which skill might be the most useful. After that, try to use "magicskills readskill <path>" to read the SKILL.md file under this skill path to get more detailed information. Finally, based on the content of this file, decide whether to read the documentation in other paths or use "magicskills execskill <command>" to directly execute the relevant script.
-
-Usage notes:
-- Only use skills listed in <available_skills> below
-- Do not invoke a skill that is already loaded in your context
+Unified skill CLI tool. Use "magicskills skill-tool listskill --name claudecode" to find relevant skills.
+Then use "magicskills skill-tool readskill --arg <path>" to read the selected skill's SKILL.md or related docs.
+If needed, use "magicskills skill-tool execskill --arg <command>" to run the command.
 </usage>
-
-<available_skills>
-
-<skill>
-<name>pdf</name>
-<description>Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill.</description>
-<path>C:\Users\13978\allskills\pdf</path>
-</skill>
-
-<skill>
-<name>docx</name>
-<description>Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.</description>
-<path>C:\Users\13978\allskills\docx</path>
-</skill>
-
-</available_skills>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
@@ -685,9 +662,7 @@ magicskills syncskills claudecode --mode cli_description
 
 ```
 
-```bash
-magicskills syncskills claudecode --mode tool_description
-```
+> `tool_description` mode has been removed in current versions. The transcript below is kept only as a historical reference for older releases.
 
 ```bash
 

@@ -4,8 +4,9 @@ from pathlib import Path
 
 from magicskills.command.change_cli_description import change_cli_description
 from magicskills.command.syncskills import syncskills
-from magicskills.type.skills import Skills
+from magicskills.type.skills import LEGACY_DEFAULT_CLI_DESCRIPTION, Skills
 from magicskills.type.skillsregistry import REGISTRY, SkillsRegistry
+from magicskills.utils.agents_md import generate_skills_xml
 from magicskills.utils.utils import skill_paths_to_skills
 
 
@@ -47,17 +48,6 @@ def test_syncskills_none_mode_keeps_original_skills_block(tmp_path: Path) -> Non
     assert "Use the CLI path only." not in content
 
 
-def test_syncskills_tool_description_mode_omits_skills_block(tmp_path: Path) -> None:
-    skills = _build_skills(tmp_path)
-
-    output = syncskills(skills, mode="tool_description")
-
-    content = output.read_text(encoding="utf-8")
-    assert "<usage>\nUse the tool channel only.\n</usage>" in content
-    assert "<available_skills>" not in content
-    assert "<name>demo</name>" not in content
-
-
 def test_syncskills_cli_description_mode_omits_skills_block(tmp_path: Path) -> None:
     skills = _build_skills(tmp_path, cli_description="Use the CLI path only.")
 
@@ -75,8 +65,39 @@ def test_syncskills_cli_description_mode_uses_default_description(tmp_path: Path
     output = syncskills(skills, mode="cli_description")
 
     content = output.read_text(encoding="utf-8")
-    assert "Unified skill CLI." in content
+    assert 'Unified skill CLI tool. Use "magicskills skill-tool listskill --name demo_collection"' in content
+    assert 'Then use "magicskills skill-tool readskill --arg <path>"' in content
+    assert 'If needed, use "magicskills skill-tool execskill --arg <command>"' in content
     assert "<available_skills>" not in content
+
+
+def test_syncskills_cli_description_mode_formats_custom_skills_name_placeholder(tmp_path: Path) -> None:
+    skills = _build_skills(tmp_path, cli_description="Use skills collection {skills_name}.")
+
+    output = syncskills(skills, mode="cli_description")
+
+    content = output.read_text(encoding="utf-8")
+    assert "<usage>\nUse skills collection demo_collection.\n</usage>" in content
+
+
+def test_syncskills_cli_description_mode_upgrades_legacy_default_description(tmp_path: Path) -> None:
+    skills = _build_skills(tmp_path, cli_description=LEGACY_DEFAULT_CLI_DESCRIPTION)
+
+    output = syncskills(skills, mode="cli_description")
+
+    content = output.read_text(encoding="utf-8")
+    assert 'Unified skill CLI tool. Use "magicskills skill-tool listskill --name demo_collection"' in content
+
+
+def test_generate_skills_xml_rejects_removed_tool_description_mode(tmp_path: Path) -> None:
+    skills = _build_skills(tmp_path)
+
+    try:
+        generate_skills_xml(skills.skill_list, mode="tool_description", tool_description=skills.tool_description)
+    except ValueError as exc:
+        assert str(exc) == "Unsupported sync mode: tool_description"
+        return
+    raise AssertionError("tool_description mode should be unsupported")
 
 
 def test_registry_persists_cli_description(tmp_path: Path) -> None:

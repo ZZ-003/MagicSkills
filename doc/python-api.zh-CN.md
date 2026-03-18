@@ -811,13 +811,12 @@ syncskills(
 
 - `skills`：要同步的 `Skills` 集合。
 - `output_path`：目标文件路径；不传时使用 `skills.agent_md_path`。
-- `mode`：可选 `none`、`tool_description`、`cli_description`。
+- `mode`：可选 `none`、`cli_description`。
 
 **模式选择建议**
 
-- `none`：适合希望目标运行时在 `AGENTS.md` 中直接看到可用 skill 列表的场景
-- `tool_description`：适合希望目标运行时看到面向 tool 的使用说明，而不是内嵌 skills 表的场景
-- `cli_description`：适合希望目标运行时看到面向 CLI 的使用说明，而不是内嵌 skills 表的场景
+- `none`：适合 agent 会读取 `AGENTS.md`，并且它自己已经有一套原生 skill 实现，因此需要保留显式 skill 列表的场景
+- `cli_description`：适合 agent 会读取 `AGENTS.md`，但没有启用原生 skill 实现，需要由 `AGENTS.md` 引导它走 `magicskills` CLI 命令的场景
 
 **返回值**
 
@@ -842,16 +841,6 @@ from magicskills import REGISTRY, syncskills
 
 coder = REGISTRY.get_skills("coder")
 path = syncskills(coder, "./AGENTS.md")
-print(path)
-```
-
-只使用 `tool_description` 同步：
-
-```python
-from magicskills import REGISTRY, syncskills
-
-coder = REGISTRY.get_skills("coder")
-path = syncskills(coder, mode="tool_description")
 print(path)
 ```
 
@@ -963,7 +952,7 @@ changetooldescription(coder, "Unified skill tool")
 
 - 如果目标集合属于当前 `REGISTRY`，这个 API 会自动把修改持久化到注册表。
 - 这个元数据适合给外部框架或你自己的工具包装层读取。
-- 只有在使用 `mode=\"tool_description\"` 时，它才会影响 `syncskills()` 的输出。
+- 它不再影响 `syncskills()` 的输出。
 
 ## ✏️ `change_cli_description()` / `changeclidescription()`
 
@@ -989,7 +978,10 @@ changeclidescription(skills: Skills, description: str) -> None
 from magicskills import REGISTRY, change_cli_description
 
 coder = REGISTRY.get_skills("coder")
-change_cli_description(coder, "Use magicskills listskill, readskill, and execskill commands only")
+change_cli_description(
+    coder,
+    'Unified skill CLI tool. Use "magicskills skill-tool listskill --name {skills_name}" to find relevant skills.',
+)
 ```
 
 用兼容别名调用：
@@ -998,7 +990,7 @@ change_cli_description(coder, "Use magicskills listskill, readskill, and execski
 from magicskills import REGISTRY, changeclidescription
 
 coder = REGISTRY.get_skills("coder")
-changeclidescription(coder, "Use magicskills listskill/readskill/execskill only")
+changeclidescription(coder, 'Use "magicskills skill-tool listskill --name {skills_name}" first')
 ```
 
 **补充说明**

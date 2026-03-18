@@ -50,22 +50,23 @@ magicskills <command> -h
 
 **使用场景**
 
-想快速查看当前 `Allskills` 里已经注册了哪些 skill，以及每个 skill 的基础说明。
+想快速查看当前 `Allskills` 或某个命名 skills 集合里已经注册了哪些 skill，以及每个 skill 的基础说明。
 
 **命令格式**
 
 ```bash
-magicskills listskill
+magicskills listskill [--name <collection-name>]
 ```
 
 **参数说明**
 
-无。
+- `--name <collection-name>`：列出 `magicskills listskills` 中某个命名 skills 集合里的 skill；不传时使用 `Allskills`。
 
 **功能示例**
 
 ```bash
 magicskills listskill
+magicskills listskill --name coder
 ```
 
 输出会按顺序列出每个 skill 的：
@@ -173,7 +174,7 @@ magicskills execskill --paths ./.claude/skills ./vendor-skills -- ls -la
 **命令格式**
 
 ```bash
-magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_description}] [-y]
+magicskills syncskills <name> [-o OUTPUT] [--mode {none,cli_description}] [-y]
 ```
 
 **参数说明**
@@ -182,15 +183,13 @@ magicskills syncskills <name> [-o OUTPUT] [--mode {none,tool_description,cli_des
 - `-o, --output`：输出文件路径；不传时使用该集合自己的 `agent_md_path`。
 - `--mode`：同步渲染模式。
 - `none`：保持原来的 `<usage> + <available_skills>` 结构。
-- `tool_description`：只输出 `<usage>`，内容来自集合的 `tool_description`。
 - `cli_description`：只输出 `<usage>`，内容来自集合的 `cli_description`。
 - `-y, --yes`：跳过交互确认，直接同步。
 
 **模式选择建议**
 
-- `none`：适合希望目标运行时在 `AGENTS.md` 中直接看到可用 skill 列表的场景
-- `tool_description`：适合希望目标运行时看到面向 tool 的使用说明，而不是内嵌 skills 表的场景
-- `cli_description`：适合希望目标运行时看到面向 CLI 的使用说明，而不是内嵌 skills 表的场景
+- `none`：适合 agent 会读取 `AGENTS.md`，并且它自己已经有一套原生 skill 实现，因此需要保留显式 skill 列表的场景
+- `cli_description`：适合 agent 会读取 `AGENTS.md`，但没有启用原生 skill 实现，需要由 `AGENTS.md` 引导它走 `magicskills` CLI 命令的场景
 
 **功能示例**
 
@@ -204,12 +203,6 @@ magicskills syncskills coder
 
 ```bash
 magicskills syncskills coder --output ./AGENTS.md
-```
-
-只使用 `tool_description` 同步：
-
-```bash
-magicskills syncskills coder --mode tool_description
 ```
 
 只使用 `cli_description` 同步：
@@ -657,7 +650,7 @@ magicskills listskills --json
 补充说明：
 
 - 这会更新集合元数据。
-- 只有在使用 `--mode tool_description` 时，它才会影响 `syncskills` 的输出。
+- 它不再影响 `syncskills` 的输出；这个字段保留给外部框架或你自己的包装层使用。
 
 ## ✏️ `changeclidescription`
 
@@ -681,7 +674,7 @@ magicskills changeclidescription <name> <description>
 更新描述：
 
 ```bash
-magicskills changeclidescription coder "Use magicskills listskill, readskill, and execskill commands only"
+magicskills changeclidescription coder "Unified skill CLI tool. Use magicskills skill-tool listskill --name coder first."
 ```
 
 更新后查看：
@@ -725,6 +718,12 @@ magicskills skill-tool <action> [--arg ARG] [--name NAME]
 
 ```bash
 magicskills skill-tool listskill
+```
+
+列出指定命名集合中的 skill：
+
+```bash
+magicskills skill-tool listskill --name coder
 ```
 
 在指定命名集合里读取某个 skill：

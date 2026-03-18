@@ -25,7 +25,7 @@
 
 ### 生成 AGETNS.md
 
-执行 `magicskills syncskills windsurf --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
+执行 `magicskills syncskills windsurf --mode cli_description --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
 
 ```markdown
@@ -33,29 +33,12 @@
 
 <skills_system priority="1">
 
-## Available Skills
-
 <!-- SKILLS_TABLE_START -->
 <usage>
-When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.
-
-How to use skills:
-Unified skill cli. If you are not sure, you can first use "magicskills listskill" to search for available skills. Then, determine which skill might be the most useful. After that, try to use "magicskills readskill <path>" to read the SKILL.md file under this skill path to get more detailed information. Finally, based on the content of this file, decide whether to read the documentation in other paths or use "magicskills execskill <command>" to directly execute the relevant script.
-
-Usage notes:
-- Only use skills listed in <available_skills> below
-- Do not invoke a skill that is already loaded in your context
+Unified skill CLI tool. Use "magicskills skill-tool listskill --name windsurf" to find relevant skills.
+Then use "magicskills skill-tool readskill --arg <path>" to read the selected skill's SKILL.md or related docs.
+If needed, use "magicskills skill-tool execskill --arg <command>" to run the command.
 </usage>
-
-<available_skills>
-
-<skill>
-<name>docx</name>
-<description>Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.</description>
-<path>C:\Users\13978\allskills\docx</path>
-</skill>
-
-</available_skills>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
@@ -535,9 +518,7 @@ Cascade_Self_Introduction_EN.docx - 英文版自我介绍
 
 
 
-```bash
-magicskills syncskills windsurf --mode tool_description
-```
+> `tool_description` 模式已在当前版本移除，下面的历史对话仅用于旧版本兼容参考。
 
 ```bash
 请你阅读当前目录下的AGENTS.md文件，需要使用到名为Mcp的conda'环境下的magicskills库中的若干指令，生成一份你的自我介绍，保存在 .docx 文档中

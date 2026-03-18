@@ -41,11 +41,19 @@ DEFAULT_TOOL_DESCRIPTION = inspect.cleandoc(
     """
 )
 
-DEFAULT_CLI_DESCRIPTION = inspect.cleandoc(
+LEGACY_DEFAULT_CLI_DESCRIPTION = inspect.cleandoc(
     """
     Unified skill CLI. Use "magicskills listskill" to find relevant skills.
     Then use "magicskills readskill" to read the selected skill's SKILL.md or related docs.
     If needed, use "magicskills execskill -- <command>" to run the command.
+    """
+)
+
+DEFAULT_CLI_DESCRIPTION = inspect.cleandoc(
+    """
+    Unified skill CLI tool. Use "magicskills skill-tool listskill --name {skills_name}" to find relevant skills.
+    Then use "magicskills skill-tool readskill --arg <path>" to read the selected skill's SKILL.md or related docs.
+    If needed, use "magicskills skill-tool execskill --arg <command>" to run the command.
     """
 )
 

@@ -323,8 +323,8 @@ def _skill_list_from_args(values: Iterable[str] | None):
 
 def cmd_list(args: argparse.Namespace) -> int:
     """List available skills."""
-    _ = args
-    print(command_listskill(ALL_SKILLS()))
+    skills = _registered_skills_or_exit(args.name) if args.name else ALL_SKILLS()
+    print(command_listskill(skills))
     return 0
 
 
@@ -534,7 +534,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="magicskills")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_list = sub.add_parser("listskill", help="List skills from Allskills")
+    p_list = sub.add_parser("listskill", help="List skills from Allskills or one named skills collection")
+    p_list.add_argument("--name", help="Skills collection name shown by listskills")
     p_list.set_defaults(func=cmd_list)
 
     p_read = sub.add_parser("readskill", help="Read by file path or skill name")
@@ -555,7 +556,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         default="none",
         choices=SYNC_MODES,
-        help="Sync mode: keep original skills block, or render only one description field",
+        help="Sync mode: keep original skills block, or render only CLI description",
     )
     p_sync.add_argument("-y", "--yes", action="store_true", help="Non-interactive")
     p_sync.set_defaults(func=cmd_sync)

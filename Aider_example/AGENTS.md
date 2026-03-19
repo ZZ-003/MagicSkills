@@ -4,21 +4,9 @@
 
 <!-- SKILLS_TABLE_START -->
 <usage>
-Unified skill tool. First use "listskill" to find relevant skills. 
-Then use "readskill" to read the selected skill's SKILL.md or related docs. 
-If needed, use "execskill" to run the command.
-
-
-Input format:
-{
-    "action": "<action_name>",
-    "arg": "<string argument>"
-}
-
-Actions:
-- listskill
-- readskill: arg = file path
-- execskill: arg = full command string
+Unified skill CLI tool. Use "magicskills skill-tool listskill --name Aider_skills" to find relevant skills.
+Then use "magicskills skill-tool readskill --arg <path>" to read the selected skill's SKILL.md or related docs.
+If needed, use "magicskills skill-tool execskill --arg <command>" to run the command.
 </usage>
 <!-- SKILLS_TABLE_END -->
 

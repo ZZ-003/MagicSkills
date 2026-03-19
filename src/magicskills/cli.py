@@ -220,6 +220,20 @@ def _registered_skills_or_exit(name: str) -> Skills:
         raise SystemExit(str(exc)) from exc
 
 
+def _format_install_error(exc: Exception, *, yes: bool) -> str:
+    """Render install failures as concise CLI-facing messages."""
+    if isinstance(exc, FileExistsError):
+        lines = [f"install failed: {exc}"]
+        if not yes:
+            lines.append("Hint: rerun with -y/--yes to overwrite the existing skill directory.")
+        lines.append("Hint: use -t/--target to install into a different directory.")
+        return "\n".join(lines)
+    if isinstance(exc, subprocess.CalledProcessError):
+        command = exc.cmd if isinstance(exc.cmd, str) else " ".join(str(part) for part in exc.cmd)
+        return f"install failed: command exited with status {exc.returncode}: {command}"
+    return f"install failed: {exc}"
+
+
 def _serialize_skills_instances(instances: list[Skills]) -> list[dict[str, object]]:
     """Convert named skills collections into JSON-safe payload."""
     payload = []
@@ -374,13 +388,16 @@ def cmd_install(args: argparse.Namespace) -> int:
     """Install skills from repo/local source into configured scope."""
     if args.target and (args.global_scope or args.universal):
         raise SystemExit("--target cannot be used with --global or --universal")
-    installed = install(
-        args.source,
-        global_=args.global_scope,
-        universal=args.universal,
-        yes=args.yes,
-        target_root=args.target,
-    )
+    try:
+        installed = install(
+            args.source,
+            global_=args.global_scope,
+            universal=args.universal,
+            yes=args.yes,
+            target_root=args.target,
+        )
+    except (FileExistsError, FileNotFoundError, ValueError, subprocess.CalledProcessError, OSError) as exc:
+        raise SystemExit(_format_install_error(exc, yes=args.yes)) from exc
     for path in installed:
         print(f"Installed: {path}")
     return 0

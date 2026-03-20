@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .execskill import parse_exec_command
+from .listskill import serialize_skill_list
 
 if TYPE_CHECKING:
     from ..type.skills import Skills
@@ -15,7 +16,7 @@ def skill_tool(skills: Skills, action: str, arg: str = "") -> dict[str, object]:
     try:
         action_lower = action.lower()
         if action_lower in {"listskill", "list", "list_metadata"}:
-            return {"ok": True, "action": action, "result": skills.listskill()}
+            return {"ok": True, "action": action, "result": serialize_skill_list(skills.skill_list)}
         if action_lower in {"readskill", "read", "read_file"}:
             return {"ok": True, "action": action, "result": skills.readskill(arg)}
         if action_lower in {"execskill", "exec", "run_command"}:

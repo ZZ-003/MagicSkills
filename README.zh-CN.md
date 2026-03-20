@@ -170,8 +170,8 @@ magicskills syncskills agent1_skills
 
 `syncskills` 支持两种同步到 `AGENTS.md` 的模式：
 
-- `none`：保留标准的 `<usage> + <available_skills>` 结构；适合 agent 会读取 `AGENTS.md`，并且它自己已经有一套原生 skill 实现的场景
-- `cli_description`：只写 `<usage>`，内容来自集合的 `cli_description`；适合 agent 会读取 `AGENTS.md`，但没有启用原生 skill 实现，需要由 `AGENTS.md` 引导它走 `magicskills` CLI 命令的场景
+- `none`：保留标准的 `<usage> + <available_skills>` 结构；适合能够根据 `AGENTS.md` 中给出的 skill 信息列表直接发现并使用对应 skill 的 agent
+- `cli_description`：只写 `<usage>`，内容来自集合的 `cli_description`；适合不能根据 `AGENTS.md` 中给出的 skill 信息列表直接使用 skill、需要通过 `magicskills skill-tool` 的 CLI 说明来使用 skill 的 agent
 
 示例：
 
@@ -389,7 +389,7 @@ demo-skill/
 | `showskill` | 查看某个 skill 包的完整内容 | 展示元数据以及 skill 目录中的全部文件 |
 | `createskills` | 创建一个命名的 skills 集合 | 为某个 agent 或团队构建隔离的 skill 集 |
 | `listskills` | 列出所有命名的 skills 集合 | 输出人类可读格式或 JSON 格式 |
-| `deleteskills` | 删除一个命名的 skills 集合 | 只删除集合注册信息，不删除 skill 文件 |
+| `deleteskills` | 删除一个或多个命名的 skills 集合 | 只删除集合注册信息，不删除 skill 文件 |
 | `changetooldescription` | 修改集合的 `tool_description` 元数据 | 更新面向 tool 的描述，供后续查询和集成使用 |
 | `changeclidescription` | 修改集合的 `cli_description` 元数据 | 更新面向 CLI 的描述，供后续查询和集成使用 |
 | `skill-tool` | 以工具函数风格调用 skill 能力 | 用统一的 JSON 输出分发 list/read/exec |
@@ -449,7 +449,7 @@ from magicskills import (
 2. 使用 `createskills` 创建一个只包含部分 skill 的命名集合
 3. 使用 `syncskills` 把该集合写入目标 `AGENTS.md`
 4. 根据目标运行时选择同步模式：
-   `none` 适合 agent 会读取 `AGENTS.md` 且自己已有 skill 系统，`cli_description` 适合 agent 会读取 `AGENTS.md` 但需要改走 CLI 指令
+   `none` 适合能够根据 `AGENTS.md` 中给出的 skill 信息列表直接使用 skill 的 agent，`cli_description` 适合不能直接使用该列表、需要通过 `magicskills skill-tool` 的 CLI 说明来使用 skill 的 agent
 5. 让 agent 只读取这个目标 `AGENTS.md`
 
 示例：

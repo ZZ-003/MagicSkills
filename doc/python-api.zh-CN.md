@@ -766,17 +766,18 @@ for item in listskills():
 
 **使用场景**
 
-删除一个命名 `Skills` 集合的注册信息。
+删除一个或多个命名 `Skills` 集合的注册信息。
 
 **签名**
 
 ```python
-deleteskills(name: str) -> None
+deleteskills(name: str, *more_names: str) -> None
 ```
 
 **参数说明**
 
-- `name`：要删除的命名集合名称。
+- `name`：第一个要删除的命名集合名称。
+- `more_names`：可选的其他命名集合名称，会在同一次调用中一起删除。
 
 **功能示例**
 
@@ -784,6 +785,14 @@ deleteskills(name: str) -> None
 from magicskills import deleteskills
 
 deleteskills("coder")
+```
+
+一次删除多个命名集合：
+
+```python
+from magicskills import deleteskills
+
+deleteskills("coder", "reviewer", "release_skills")
 ```
 
 **补充说明**
@@ -815,8 +824,8 @@ syncskills(
 
 **模式选择建议**
 
-- `none`：适合 agent 会读取 `AGENTS.md`，并且它自己已经有一套原生 skill 实现，因此需要保留显式 skill 列表的场景
-- `cli_description`：适合 agent 会读取 `AGENTS.md`，但没有启用原生 skill 实现，需要由 `AGENTS.md` 引导它走 `magicskills` CLI 命令的场景
+- `none`：适合能够根据 `AGENTS.md` 中给出的 skill 信息列表直接发现并使用对应 skill 的 agent
+- `cli_description`：适合不能根据 `AGENTS.md` 中给出的 skill 信息列表直接使用 skill、需要通过 `magicskills skill-tool` 的 CLI 说明来使用 skill 的 agent
 
 **返回值**
 
@@ -980,7 +989,7 @@ from magicskills import REGISTRY, change_cli_description
 coder = REGISTRY.get_skills("coder")
 change_cli_description(
     coder,
-    'Unified skill CLI tool. Use "magicskills skill-tool listskill --name {skills_name}" to find relevant skills.',
+    'Whenever you receive a task, you must first run "magicskills skill-tool listskill --name {skills_name}", then use readskill to inspect relevant docs, and finally decide whether to keep reading or run execskill.',
 )
 ```
 
@@ -990,7 +999,7 @@ change_cli_description(
 from magicskills import REGISTRY, changeclidescription
 
 coder = REGISTRY.get_skills("coder")
-changeclidescription(coder, 'Use "magicskills skill-tool listskill --name {skills_name}" first')
+changeclidescription(coder, 'Whenever you receive a task, you must first run "magicskills skill-tool listskill --name {skills_name}", then use readskill to inspect relevant docs, and finally decide whether to keep reading or run execskill.')
 ```
 
 **补充说明**

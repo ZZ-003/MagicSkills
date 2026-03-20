@@ -38,9 +38,9 @@ This Skill is especially useful in **compiler frontends**, **program analysis**,
 Follow these steps strictly and in order:
 
 1. **Navigate to the Skill scripts directory**
-   - Change working directory to:
+   - Change working directory to the `scripts/` directory under this skill:
      ```
-     skills_for_all_agent/skill/c_2_ast/scripts/
+     scripts/
      ```
 
 2. **Handle the input C source**

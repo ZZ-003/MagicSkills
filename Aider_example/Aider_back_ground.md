@@ -229,6 +229,98 @@ magicskills skill-tool listskill --name Aider_skills
 /run magicskills skill-tool listskill --name Aider_skills
 ```
 
+### 8.1 一个典型误区
+
+在这个场景里，其实发生了三件事。
+
+第一件，你想让 `aider` “输出下一条命令”，但它以为你要它改文件。
+
+原因是你没有用 `/ask`，而是直接输入普通消息。
+在 `aider` 里，普通消息默认更偏向“编辑文件”模式，不是纯聊天模式。
+
+所以它才会报：
+
+```text
+The LLM did not conform to the edit format.
+```
+
+这句话的意思不是“命令错了”，而是：
+
+- 模型没有按 `aider` 要求的“改文件格式”回答
+- 你想让它输出一句命令
+- 但 `aider` 期待它返回“要改哪个文件、怎么改”
+
+第二件，它把一句普通话误当成了文件名。
+
+例如出现了：
+
+```text
+The appropriate next command is
+Create new file? (Y)es/(N)o [Yes]: y
+Applied edit to The appropriate next command is
+```
+
+这说明 `aider` 把这句：
+
+```text
+The appropriate next command is
+```
+
+错误识别成了一个文件名，于是进入了“改文件”流程。
+所以这里不是它真的理解了你的意思，而是已经跑偏了。
+
+第三件，真正有用的是你后面手动执行的：
+
+```text
+/run magicskills skill-tool listskill --name Aider_skills
+```
+
+返回结果里有：
+
+```json
+{
+  "name": "c_2_ast",
+  "path": "/root/allskills/c_2_ast/SKILL.md"
+}
+```
+
+这证明了两件事：
+
+- `c_2_ast` 这个 skill 是真的存在的
+- 如果前面模型说“不存在这个 skill”，那就是模型不靠谱，不是实际系统里没有
+
+所以整件事可以压缩成一句话：
+
+- 你本来只是想问“下一条命令是什么”
+- 但 `aider` 把它理解成“你要我改文件”
+- 真正有效的是后面的 `/run`
+
+在 `aider` 里，最核心的区分就是：
+
+- 问问题，不想改文件，用 `/ask`
+- 真要执行命令，用 `/run`
+- 真要改代码，用普通输入或者 `/code`
+
+所以刚才那个场景里，更合适的写法应该是先问：
+
+```text
+/ask 我想了解更多 AST 知识，请只输出下一条命令，不要修改任何文件。
+```
+
+然后再执行它给出的命令：
+
+```text
+/run magicskills skill-tool listskill --name Aider_skills
+```
+
+而既然 `listskill` 已经执行过，并且已经确认 `c_2_ast` 存在了，那么下一条真正该执行的命令其实是：
+
+```text
+/run magicskills skill-tool readskill --arg /root/allskills/c_2_ast/SKILL.md
+```
+
+这条命令的作用是读取 `c_2_ast` 的说明文档，确认这个 skill 的具体使用方式。
+
 这种方式的优点是：
 
 - `aider` 负责理解上下文

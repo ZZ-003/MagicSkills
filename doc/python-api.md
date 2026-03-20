@@ -770,12 +770,13 @@ Delete the registration of a named `Skills` collection.
 **Signature**
 
 ```python
-deleteskills(name: str) -> None
+deleteskills(name: str, *more_names: str) -> None
 ```
 
 **Parameters**
 
-- `name`: the name of the named collection to delete
+- `name`: the first named collection to delete
+- `more_names`: optional additional named collections to delete in the same call
 
 **Examples**
 
@@ -783,6 +784,14 @@ deleteskills(name: str) -> None
 from magicskills import deleteskills
 
 deleteskills("coder")
+```
+
+Delete multiple named collections:
+
+```python
+from magicskills import deleteskills
+
+deleteskills("coder", "reviewer", "release_skills")
 ```
 
 **Notes**
@@ -814,8 +823,8 @@ syncskills(
 
 **How to choose the mode**
 
-- `none`: use this when the agent reads `AGENTS.md` and already has its own native skill implementation, so the explicit skill list should be preserved
-- `cli_description`: use this when the agent reads `AGENTS.md` but does not have native skill support enabled, so it should be guided toward `magicskills` CLI commands
+- `none`: use this for agents that can directly discover and use skills from the skill information list in `AGENTS.md`
+- `cli_description`: use this for agents that cannot directly use skills from the skill information list in `AGENTS.md` and instead need CLI guidance through `magicskills skill-tool`
 
 **Return value**
 
@@ -979,7 +988,7 @@ from magicskills import REGISTRY, change_cli_description
 coder = REGISTRY.get_skills("coder")
 change_cli_description(
     coder,
-    'Unified skill CLI tool. Use "magicskills skill-tool listskill --name {skills_name}" to find relevant skills.',
+    'Whenever you receive a task, you must first run "magicskills skill-tool listskill --name {skills_name}", then use readskill to inspect relevant docs, and finally decide whether to keep reading or run execskill.',
 )
 ```
 
@@ -989,7 +998,7 @@ Call through the compatibility alias:
 from magicskills import REGISTRY, changeclidescription
 
 coder = REGISTRY.get_skills("coder")
-changeclidescription(coder, 'Use "magicskills skill-tool listskill --name {skills_name}" first')
+changeclidescription(coder, 'Whenever you receive a task, you must first run "magicskills skill-tool listskill --name {skills_name}", then use readskill to inspect relevant docs, and finally decide whether to keep reading or run execskill.')
 ```
 
 **Notes**

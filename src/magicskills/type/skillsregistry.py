@@ -226,13 +226,21 @@ class SkillsRegistry:
             raise KeyError(f"Skills instance '{name}' not found")
         return self._instances[name]
 
-    def deleteskills(self, name: str) -> None:
-        """Delete one named collection and persist change."""
-        if name == ALL_SKILLS_NAME:
-            raise ValueError(f"Skills instance '{ALL_SKILLS_NAME}' is built-in and cannot be deleted")
-        if name not in self._instances:
-            raise KeyError(f"Skills instance '{name}' not found")
-        del self._instances[name]
+    def deleteskills(self, name: str, *more_names: str) -> None:
+        """Delete one or more named collections and persist change once."""
+        names: list[str] = []
+        for value in (name, *more_names):
+            if value not in names:
+                names.append(value)
+
+        for value in names:
+            if value == ALL_SKILLS_NAME:
+                raise ValueError(f"Skills instance '{ALL_SKILLS_NAME}' is built-in and cannot be deleted")
+            if value not in self._instances:
+                raise KeyError(f"Skills instance '{value}' not found")
+
+        for value in names:
+            del self._instances[value]
         self.saveskills()
 
 REGISTRY = SkillsRegistry(_init_token=_REGISTRY_INIT_TOKEN)

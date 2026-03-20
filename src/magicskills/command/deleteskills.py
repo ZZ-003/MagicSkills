@@ -5,6 +5,6 @@ from __future__ import annotations
 from ..type.skillsregistry import REGISTRY
 
 
-def deleteskills(name: str) -> None:
-    """Delete a registered Skills collection by name."""
-    REGISTRY.deleteskills(name)
+def deleteskills(name: str, *more_names: str) -> None:
+    """Delete one or more registered Skills collections by name."""
+    REGISTRY.deleteskills(name, *more_names)

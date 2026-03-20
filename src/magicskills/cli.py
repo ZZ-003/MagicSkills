@@ -479,14 +479,17 @@ def cmd_create_skills(args: argparse.Namespace) -> int:
     if paths and skill_list:
         raise SystemExit("--paths cannot be used with --skill-list")
     path_values = [str(path) for path in paths] if paths else None
-    instance = command_createskills(
-        name=args.name,
-        skill_list=skill_list,
-        paths=path_values,
-        tool_description=args.tool_description,
-        cli_description=args.cli_description,
-        agent_md_path=args.agent_md_path,
-    )
+    try:
+        instance = command_createskills(
+            name=args.name,
+            skill_list=skill_list,
+            paths=path_values,
+            tool_description=args.tool_description,
+            cli_description=args.cli_description,
+            agent_md_path=args.agent_md_path,
+        )
+    except (KeyError, ValueError, FileNotFoundError) as exc:
+        raise SystemExit(str(exc)) from exc
     print(f"Created skills instance: {instance.name}")
     print(f"Skills count: {len(instance.skills)}")
     return 0
@@ -507,9 +510,16 @@ def cmd_load_skills(args: argparse.Namespace) -> int:
 
 
 def cmd_delete_skills_instance(args: argparse.Namespace) -> int:
-    """Delete one named skills collection instance."""
-    command_deleteskills(args.name)
-    print(f"Deleted skills instance: {args.name}")
+    """Delete one or more named skills collection instances."""
+    try:
+        command_deleteskills(*args.names)
+    except (KeyError, ValueError) as exc:
+        message = exc.args[0] if exc.args else str(exc)
+        raise SystemExit(message) from exc
+    if len(args.names) == 1:
+        print(f"Deleted skills instance: {args.names[0]}")
+    else:
+        print(f"Deleted skills instances: {', '.join(args.names)}")
     return 0
 
 
@@ -634,8 +644,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_load_skills.add_argument("--json", action="store_true", help="JSON output")
     p_load_skills.set_defaults(func=cmd_load_skills)
 
-    p_delete_skills = sub.add_parser("deleteskills", help="Delete a named skills collection")
-    p_delete_skills.add_argument("name", help="Skills instance name")
+    p_delete_skills = sub.add_parser("deleteskills", help="Delete one or more named skills collections")
+    p_delete_skills.add_argument("names", nargs="+", help="One or more skills instance names")
     p_delete_skills.set_defaults(func=cmd_delete_skills_instance)
 
     p_save_skills = sub.add_parser("saveskills", help="Persist registry to disk")

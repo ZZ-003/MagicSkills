@@ -29,7 +29,7 @@ from .type.skills import Skills
 from .type.skillsregistry import ALL_SKILLS, REGISTRY
 
 
-__version__ = "0.1.0"
+__version__ = "1.1.0"
 
 DEFAULT_SKILLS_ROOT = Path.cwd() / ".claude" / "skills"
 changeclidescription = change_cli_description

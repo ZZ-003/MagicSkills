@@ -188,8 +188,8 @@ magicskills syncskills <name> [-o OUTPUT] [--mode {none,cli_description}] [-y]
 
 **模式选择建议**
 
-- `none`：适合 agent 会读取 `AGENTS.md`，并且它自己已经有一套原生 skill 实现，因此需要保留显式 skill 列表的场景
-- `cli_description`：适合 agent 会读取 `AGENTS.md`，但没有启用原生 skill 实现，需要由 `AGENTS.md` 引导它走 `magicskills` CLI 命令的场景
+- `none`：适合能够根据 `AGENTS.md` 中给出的 skill 信息列表直接发现并使用对应 skill 的 agent
+- `cli_description`：适合不能根据 `AGENTS.md` 中给出的 skill 信息列表直接使用 skill、需要通过 `magicskills skill-tool` 的 CLI 说明来使用 skill 的 agent
 
 **功能示例**
 
@@ -591,17 +591,17 @@ JSON 输出中每个集合对象包含：
 
 **使用场景**
 
-某个命名 skills 集合已经不用了，你只想删除它的注册信息，但保留原始 skill 文件。
+一个或多个命名 skills 集合已经不用了，你只想删除它们的注册信息，但保留原始 skill 文件。
 
 **命令格式**
 
 ```bash
-magicskills deleteskills <name>
+magicskills deleteskills <name> [<name> ...]
 ```
 
 **参数说明**
 
-- `<name>`：要删除的命名 skills 集合名称。
+- `<name>`：要删除的一个或多个命名 skills 集合名称。
 
 **功能示例**
 
@@ -609,6 +609,12 @@ magicskills deleteskills <name>
 
 ```bash
 magicskills deleteskills coder
+```
+
+一次删除多个命名集合：
+
+```bash
+magicskills deleteskills coder reviewer release_skills
 ```
 
 补充说明：
@@ -674,7 +680,7 @@ magicskills changeclidescription <name> <description>
 更新描述：
 
 ```bash
-magicskills changeclidescription coder "Unified skill CLI tool. Use magicskills skill-tool listskill --name coder first."
+magicskills changeclidescription coder "Whenever you receive a task, you must first run magicskills skill-tool listskill --name coder, then use readskill to inspect relevant docs, and finally decide whether to keep reading or run execskill."
 ```
 
 更新后查看：

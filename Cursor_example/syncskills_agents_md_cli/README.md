@@ -1,16 +1,4 @@
-# Aider
-
-## 使用Aider
-python -m pip install aider-install
-aider-install
-
-cd /to/your/project
-
-export OPENAI_API_BASE={}
-export OPENAI_API_KEY={}
-
-aider --model openai/qwen3-max --subtree-only --no-auto-commits
-
+# Cursor
 
 
 ## 安装magicskills
@@ -18,31 +6,30 @@ aider --model openai/qwen3-max --subtree-only --no-auto-commits
 首先 `git clone https://github.com/Narwhal-Lab/MagicSkills.git`
 
 并执行  `pip install -e .` 指令
-或者直接`pip install magicskills` 
 
 本文的示例 skill 以 **`docx`** 为例
+
+
 ### 安装 skill(之前已经下载过的可以选择跳过)
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
 
+
 ### 创建skills
 
-执行 `magicskills createskills Aider_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills cursor_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
-执行 `magicskills syncskills Aider_skills --mode cli_description --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
+执行 `magicskills syncskills cursor_skills --mode cli_description --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
-
-```markdown
-# AGENTS
-
+'''md
 <skills_system priority="1">
 
 <!-- SKILLS_TABLE_START -->
 <usage>
-Unified skill CLI tool. Whenever you receive a task, you must first run "magicskills skill-tool listskill --name Aider_skills" to view all available skills.
+Unified skill CLI tool. Whenever you receive a task, you must first run "magicskills skill-tool listskill --name cursor_skills" to view all available skills.
 Then use "magicskills skill-tool readskill --arg <file_path>" to read the selected skill's SKILL.md file by path.
 Based on that documentation, either continue reading more files with "magicskills skill-tool readskill --arg <file_path>" or run the needed command with "magicskills skill-tool execskill --arg <command>".
 </usage>
@@ -50,19 +37,21 @@ Based on that documentation, either continue reading more files with "magicskill
 
 </skills_system>
 
+'''
 
-```
-
+# 设置cursor添加对应的AGENTS.md到它的rules里
+cursor一般会在当前目录下的所有AGENTS.md都添加到当前rules
 
 
 # 了解更多AST知识
-
 我想了解更多AST知识
-见log1.txt
+见image1.png
+
+
 
 # 转换一段代码为AST代码
 
-我想将下面这段 C 代码转换为 AST
+请将下面这段 C 代码转换为 AST
 ```c
 #include <stdio.h>
 
@@ -72,4 +61,4 @@ int main() {
 }
 ```
 
-见log2.txt
+见image2.png

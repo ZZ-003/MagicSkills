@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..type.skills import DEFAULT_CLI_DESCRIPTION, LEGACY_DEFAULT_CLI_DESCRIPTION
 from ..utils.agents_md import generate_skills_xml, replace_skills_section
 from ..utils.utils import read_text
 
@@ -21,8 +20,6 @@ def _absolute_path(value: Path | str) -> Path:
 def _render_cli_description(skills: Skills) -> str:
     """Render CLI description with current skills collection name when templated."""
     description = skills.cli_description
-    if description == LEGACY_DEFAULT_CLI_DESCRIPTION:
-        description = DEFAULT_CLI_DESCRIPTION
     try:
         return description.format(skills_name=skills.name, name=skills.name)
     except (IndexError, KeyError, ValueError):

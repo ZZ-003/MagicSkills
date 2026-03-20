@@ -78,8 +78,8 @@ def generate_skills_xml(
         "<usage>\n"
         "When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.\n\n"
         "How to use skills:\n"
-        'If you are not sure, you can First, read the SKILL.md file in the corresponding path of the skill. '
-        'Then, based on its content, further determine how to use it.\n\n'
+        "First, read the SKILL.md file in the corresponding path of the skill. "
+        "Then, based on its content, decide whether to read more related docs or execute the relevant command or script.\n\n"
         "Usage notes:\n"
         "- Only use skills listed in <available_skills> below\n"
         "- Do not invoke a skill that is already loaded in your context\n"

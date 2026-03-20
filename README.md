@@ -170,8 +170,8 @@ magicskills syncskills agent1_skills
 
 `syncskills` supports two `AGENTS.md` sync modes:
 
-- `none`: keep the standard `<usage> + <available_skills>` structure; use this when the agent reads `AGENTS.md` and already has its own native skill implementation
-- `cli_description`: write only `<usage>` using the collection's `cli_description`; use this when the agent reads `AGENTS.md` but does not have native skill support enabled, so it should be guided toward `magicskills` CLI commands
+- `none`: keep the standard `<usage> + <available_skills>` structure; use this for agents that can directly discover and use skills from the skill information list in `AGENTS.md`
+- `cli_description`: write only `<usage>` using the collection's `cli_description`; use this for agents that cannot directly use skills from the skill information list in `AGENTS.md` and instead need CLI guidance through `magicskills skill-tool`
 
 Examples:
 
@@ -389,7 +389,7 @@ Chinese version: [doc/cli.zh-CN.md](./doc/cli.zh-CN.md).
 | `showskill`               | Review the full contents of a skill package            | Show metadata and all files inside the skill directory          |
 | `createskills`            | Create a named skills collection                       | Build an isolated skill set for an agent or team               |
 | `listskills`              | List all named skills collections                      | Human-readable output or JSON output                            |
-| `deleteskills`            | Delete a named skills collection                       | Delete only the collection registration, not the skill files    |
+| `deleteskills`            | Delete one or more named skills collections            | Delete only collection registrations, not the skill files       |
 | `changetooldescription`   | Modify the collection's `tool_description` metadata    | Update tool-oriented description for later querying and integration |
 | `changeclidescription`    | Modify the collection's `cli_description` metadata     | Update CLI-oriented description for later querying and integration |
 | `skill-tool`              | Invoke skill capabilities in a tool-function style     | Use unified JSON output to dispatch list/read/exec              |
@@ -450,7 +450,7 @@ The recommended flow is:
 2. Use `createskills` to create a named collection that contains only a subset of skills
 3. Use `syncskills` to write that collection into the target `AGENTS.md`
 4. Choose the sync mode based on the target runtime:
-   `none` when the agent reads `AGENTS.md` and already has its own skill system, `cli_description` when the agent reads `AGENTS.md` but needs CLI-oriented guidance instead
+   `none` for agents that can directly use the skill information list in `AGENTS.md`, `cli_description` for agents that need CLI guidance through `magicskills skill-tool` instead
 5. Let the agent read only that target `AGENTS.md`
 
 Example:

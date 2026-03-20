@@ -187,8 +187,8 @@ magicskills syncskills <name> [-o OUTPUT] [--mode {none,cli_description}] [-y]
 
 **How to choose the mode**
 
-- `none`: use this when the agent reads `AGENTS.md` and already has its own native skill implementation, so the explicit skill list should be preserved
-- `cli_description`: use this when the agent reads `AGENTS.md` but does not have native skill support enabled, so it should be guided toward `magicskills` CLI commands
+- `none`: use this for agents that can directly discover and use skills from the skill information list in `AGENTS.md`
+- `cli_description`: use this for agents that cannot directly use skills from the skill information list in `AGENTS.md` and instead need CLI guidance through `magicskills skill-tool`
 
 **Examples**
 
@@ -590,24 +590,30 @@ Each collection object in JSON output includes:
 
 **Use case**
 
-When a named skills collection is no longer needed, you want to delete only its registration and keep the original skill files.
+When one or more named skills collections are no longer needed, you want to delete only their registrations and keep the original skill files.
 
 **Command format**
 
 ```bash
-magicskills deleteskills <name>
+magicskills deleteskills <name> [<name> ...]
 ```
 
 **Parameters**
 
-- `<name>`: the name of the named skills collection to delete
+- `<name>`: one or more named skills collection names to delete
 
 **Examples**
 
-Delete a named collection:
+Delete one named collection:
 
 ```bash
 magicskills deleteskills coder
+```
+
+Delete multiple named collections at once:
+
+```bash
+magicskills deleteskills coder reviewer release_skills
 ```
 
 Notes:
@@ -673,7 +679,7 @@ magicskills changeclidescription <name> <description>
 Update the description:
 
 ```bash
-magicskills changeclidescription coder "Unified skill CLI tool. Use magicskills skill-tool listskill --name coder first."
+magicskills changeclidescription coder "Whenever you receive a task, you must first run magicskills skill-tool listskill --name coder, then use readskill to inspect relevant docs, and finally decide whether to keep reading or run execskill."
 ```
 
 View it after updating:

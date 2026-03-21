@@ -13,47 +13,31 @@
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
-
+执行 `magicskills install https://github.com/anthropics/skills.git -t ~/allskills`
 
 ### 创建skills
 
-执行 `magicskills createskills Windsurf_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills Windsurf_skills --skill-list c_2_ast canvas-design --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
 执行 `magicskills syncskills Windsurf_skills --mode cli_description --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
 '''md
-
+# AGENTS
 
 <skills_system priority="1">
 
-## Available Skills
-
 <!-- SKILLS_TABLE_START -->
 <usage>
-When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.
-
-How to use skills:
-First, read the SKILL.md file in the corresponding path of the skill. Then, based on its content, decide whether to read more related docs or execute the relevant command or script.
-
-Usage notes:
-- Only use skills listed in <available_skills> below
-- Do not invoke a skill that is already loaded in your context
+Unified skill CLI tool. Whenever you receive a task, you must first run "magicskills skill-tool listskill --name Windsurf_skills" to view all available skills.
+Then use "magicskills skill-tool readskill --arg <file_path>" to read the selected skill's SKILL.md file by path.
+Based on that documentation, either continue reading more files with "magicskills skill-tool readskill --arg <file_path>" or run the needed command with "magicskills skill-tool execskill --arg <command>".
 </usage>
-
-<available_skills>
-
-<skill>
-<name>c_2_ast</name>
-<description>Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).</description>
-<path>/root/allskills/c_2_ast</path>
-</skill>
-
-</available_skills>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
+
 
 '''
 

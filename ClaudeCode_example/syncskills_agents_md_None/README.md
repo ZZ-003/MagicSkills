@@ -14,11 +14,11 @@
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
-执行 `magicskills install https://github.com/langchain-ai/deepagentsjs.git -t ~/allskills`
+执行 `magicskills install https://github.com/anthropics/skills.git -t ~/allskills`
 
 ### 创建skills
 
-执行 `magicskills createskills claudecode --skill-list c_2_ast arxiv-search --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills claudecode --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
@@ -53,15 +53,16 @@ Usage notes:
 </skill>
 
 <skill>
-<name>arxiv-search</name>
-<description>Search arXiv preprint repository for papers in physics, mathematics, computer science, quantitative biology, and related fields</description>
-<path>C:\Users\13978\allskills\arxiv-search</path>
+<name>docx</name>
+<description>Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.</description>
+<path>C:\Users\13978\allskills\docx</path>
 </skill>
 
 </available_skills>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
+
 
 
 ```
@@ -96,7 +97,3 @@ int main() {
 ```
 
 见log2.txt
-
-# 询问最近的计算机视觉相关论文
-
-见log3.txt

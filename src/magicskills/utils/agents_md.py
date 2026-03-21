@@ -96,14 +96,15 @@ def replace_skills_section(content: str, new_section: str) -> str:
     """Replace existing skills section or append one if missing."""
     if "<skills_system" in content:
         regex = re.compile(r"<skills_system[^>]*>[\s\S]*?</skills_system>")
-        return regex.sub(new_section, content)
+        return regex.sub(lambda _match: new_section, content)
 
     if SKILLS_TABLE_START in content:
         inner = _extract_marker_body(new_section)
         if inner is None:
             inner = re.sub(r"<skills_system[^>]*>|</skills_system>", "", new_section).strip("\n")
         regex = re.compile(rf"{re.escape(SKILLS_TABLE_START)}[\s\S]*?{re.escape(SKILLS_TABLE_END)}")
-        return regex.sub(f"{SKILLS_TABLE_START}\n{inner}\n{SKILLS_TABLE_END}", content)
+        replacement = f"{SKILLS_TABLE_START}\n{inner}\n{SKILLS_TABLE_END}"
+        return regex.sub(lambda _match: replacement, content)
 
     return content.rstrip() + "\n\n" + new_section + "\n"
 

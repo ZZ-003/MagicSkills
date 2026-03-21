@@ -7,18 +7,18 @@
 
 并执行  `pip install -e .` 指令
 
-本文的示例 skill 以 **`docx`** 为例
 
 
 ### 安装 skill(之前已经下载过的可以选择跳过)
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
-
+magicskills install anthropic/skills  -t ~/allskills
 
 ### 创建skills
 
-执行 `magicskills createskills cursor_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills cursor_skills --skill-list c_2_ast,docx --agent-md-path ./AGENTS.md`
+
 
 ### 生成 AGETNS.md
 

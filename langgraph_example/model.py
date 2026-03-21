@@ -1,8 +1,9 @@
-﻿"""LangGraph ReAct agent example — progressive skill disclosure.
+"""LangGraph ReAct agent example — progressive skill disclosure.
 
 Usage:
-    uv run --with langchain-openai --with langgraph --with python-dotenv \
-        python langgraph_example/model.py --scenario all
+    # First follow README.md setup steps, then:
+    pip install langchain-openai langgraph python-dotenv
+    python langgraph_example/model.py --scenario all
 
 Env vars (put in .env):
     OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
@@ -31,53 +32,55 @@ from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
-from magicskills import ALL_SKILLS, Skills
+from magicskills import REGISTRY
+from magicskills.type.skills import Skills
 
 load_dotenv()
 
-# ── 场景配置：log1=不停读 / log2=有执行 ─────────────────────────
-SCENARIOS: dict[str, tuple[str, str]] = {
-    "read": (
-        "log1.json",
-        "我想了解很多 AST 知识。",
-    ),
-    "exec": (
-        "log2.json",
-        "Please help me convert the following C code into an AST.\n"
-        "```c\n"
-        "#include <stdio.h>\n\n"
-        "int main() {\n"
-        '    puts("Hello from agent");\n'
-        "    return 0;\n"
-        "}\n"
-        "```",
-    ),
-}
+_SETUP_HINT = """\
+Please follow the README.md setup steps to create skills collections first:
+  magicskills createskills langgraph_agent1_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md
+  magicskills createskills langgraph_agent2_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md
+"""
 
-# ── 1. 组装 Skills ─────────────────────────────────────────────
-def _resolve_required_skills() -> tuple[object, object]:
-    all_skills = ALL_SKILLS()
+
+# ── 1. Load skill collections from registry ────────────────────
+def _load_agent_skills() -> tuple[Skills, Skills]:
+    errors: list[str] = []
+    agent1_skills: Skills | None = None
+    agent2_skills: Skills | None = None
+
     try:
-        return all_skills.get_skill("pdf"), all_skills.get_skill("c_2_ast")
+        agent1_skills = REGISTRY.get_skills("langgraph_agent1_skills")
     except KeyError:
-        local_skills = Skills(paths=[ROOT / "skills"])
-        return local_skills.get_skill("pdf"), local_skills.get_skill("c_2_ast")
+        errors.append("langgraph_agent1_skills")
+
+    try:
+        agent2_skills = REGISTRY.get_skills("langgraph_agent2_skills")
+    except KeyError:
+        errors.append("langgraph_agent2_skills")
+
+    if errors:
+        print(f"Error: skills collection(s) not found: {errors}", file=sys.stderr)
+        print(_SETUP_HINT, file=sys.stderr)
+        sys.exit(1)
+
+    return agent1_skills, agent2_skills  # type: ignore[return-value]
 
 
-skill_a, skill_b = _resolve_required_skills()
-
-my_skills = Skills(
-    name="langgraph_skills",
-    skill_list=[skill_a, skill_b],
-)
-
-# ── 2. 包装为 LangChain tool ───────────────────────────────────
-@tool("skill_tool", description=my_skills.tool_description)
-def _skill_tool(action: str, arg: str = "") -> str:
-    return json.dumps(my_skills.skill_tool(action, arg), ensure_ascii=False)
+agent1_skills, agent2_skills = _load_agent_skills()
 
 
-# ── 3. 构建 agent 并运行 ──────────────────────────────────────
+# ── 2. Build per-agent LangChain skill tools ───────────────────
+def _make_skill_tool(skills: Skills):
+    @tool("skill_tool", description=skills.tool_description)
+    def _skill_tool(action: str, arg: str = "") -> str:
+        return json.dumps(skills.skill_tool(action, arg), ensure_ascii=False)
+
+    return _skill_tool
+
+
+# ── 3. Build LLM and agents ─────────────────────────────────────
 llm = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
     temperature=0.0,
@@ -85,10 +88,33 @@ llm = ChatOpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
 )
 
-agent = create_react_agent(llm, [_skill_tool])
+agent1 = create_react_agent(llm, [_make_skill_tool(agent1_skills)])  # read scenario
+agent2 = create_react_agent(llm, [_make_skill_tool(agent2_skills)])  # exec scenario
 
-def run_once(prompt: str, log_name: str) -> None:
-    # 任务设计：触发渐进式披露 (listskill → readskill → execskill)
+
+# ── 4. 场景配置：log1=不停读文档 / log2=有执行 ──────────────────
+SCENARIOS: dict[str, tuple[str, str, object]] = {
+    "read": (
+        "log1.json",
+        "我想了解更多 AST 知识。",
+        agent1,
+    ),
+    "exec": (
+        "log2.json",
+        "请将下面这段 C 代码转换为 AST\n"
+        "```c\n"
+        "#include <stdio.h>\n\n"
+        "int main() {\n"
+        '    puts("Hello from agent");\n'
+        "    return 0;\n"
+        "}\n"
+        "```",
+        agent2,
+    ),
+}
+
+
+def run_once(prompt: str, log_name: str, agent) -> None:
     log_lines: list[str] = []
     log_file = Path(__file__).parent / log_name
 
@@ -98,7 +124,7 @@ def run_once(prompt: str, log_name: str) -> None:
             {"recursion_limit": 40},
         )
 
-        # ── 4. 打印 & 保存日志 ────────────────────────────────────
+        # ── 5. 打印 & 保存日志 ────────────────────────────────────
         for i, m in enumerate(result["messages"]):
             msg_type = getattr(m, "type", m.__class__.__name__)
             header = f"\n--- {i} | {msg_type} ---"
@@ -142,16 +168,10 @@ def main() -> None:
 
     targets = ["read", "exec"] if args.scenario == "all" else [args.scenario]
     for name in targets:
-        log_name, prompt = SCENARIOS[name]
+        log_name, prompt, agent = SCENARIOS[name]
         print(f"\n================ {name.upper()} ================\n")
-        run_once(prompt, log_name)
+        run_once(prompt, log_name, agent)
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-

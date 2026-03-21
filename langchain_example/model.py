@@ -1,8 +1,9 @@
-﻿"""LangChain tool-binding example — progressive skill disclosure.
+"""LangChain tool-binding example — progressive skill disclosure.
 
 Usage:
-    uv run --with langchain-openai --with python-dotenv \
-        python langchain_example/model.py --scenario all
+    # First follow README.md setup steps, then:
+    pip install -r langchain_example/requirements.txt
+    python langchain_example/model.py --scenario all
 
 Env vars (put in .env):
     OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
@@ -30,19 +31,64 @@ from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 
-from magicskills import ALL_SKILLS, Skills
+from magicskills import REGISTRY
+from magicskills.type.skills import Skills
 
 load_dotenv()
 
-# ── 场景配置：log1=不停读 / log2=有执行 ─────────────────────────
-SCENARIOS: dict[str, tuple[str, str]] = {
+_SETUP_HINT = """\
+Please follow the README.md setup steps to create skills collections first:
+  magicskills createskills langchain_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
+  magicskills createskills langchain_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
+"""
+
+
+# ── 1. Load skill collections from registry ────────────────────
+def _load_agent_skills() -> tuple[Skills, Skills]:
+    errors: list[str] = []
+    agent1_skills: Skills | None = None
+    agent2_skills: Skills | None = None
+
+    try:
+        agent1_skills = REGISTRY.get_skills("langchain_agent1_skills")
+    except KeyError:
+        errors.append("langchain_agent1_skills")
+
+    try:
+        agent2_skills = REGISTRY.get_skills("langchain_agent2_skills")
+    except KeyError:
+        errors.append("langchain_agent2_skills")
+
+    if errors:
+        print(f"Error: skills collection(s) not found: {errors}", file=sys.stderr)
+        print(_SETUP_HINT, file=sys.stderr)
+        sys.exit(1)
+
+    return agent1_skills, agent2_skills  # type: ignore[return-value]
+
+
+agent1_skills, agent2_skills = _load_agent_skills()
+
+
+# ── 2. Per-agent skill tool factory ────────────────────────────
+def _make_skill_tool(skills: Skills):
+    @tool("skill_tool", description=skills.tool_description)
+    def _skill_tool(action: str, arg: str = "") -> str:
+        return json.dumps(skills.skill_tool(action, arg), ensure_ascii=False)
+
+    return _skill_tool
+
+
+# ── 3. 场景配置 ─────────────────────────────────────────────────
+SCENARIOS: dict[str, tuple[str, str, Skills]] = {
     "read": (
         "log1.json",
-        "我想了解很多 AST 知识。",
+        "我想了解更多 AST 知识。",
+        agent1_skills,
     ),
     "exec": (
         "log2.json",
-        "Please help me convert the following C code into an AST.\n"
+        "请将下面这段 C 代码转换为 AST\n"
         "```c\n"
         "#include <stdio.h>\n\n"
         "int main() {\n"
@@ -50,34 +96,13 @@ SCENARIOS: dict[str, tuple[str, str]] = {
         "    return 0;\n"
         "}\n"
         "```",
+        agent2_skills,
     ),
 }
 
-# ── 1. 组装 Skills ─────────────────────────────────────────────
-def _resolve_required_skills() -> tuple[object, object]:
-    all_skills = ALL_SKILLS()
-    try:
-        return all_skills.get_skill("pdf"), all_skills.get_skill("c_2_ast")
-    except KeyError:
-        local_skills = Skills(paths=[ROOT / "skills"])
-        return local_skills.get_skill("pdf"), local_skills.get_skill("c_2_ast")
 
-
-skill_a, skill_b = _resolve_required_skills()
-
-my_skills = Skills(
-    name="langchain_skills",
-    skill_list=[skill_a, skill_b],
-)
-
-# ── 2. 包装为 LangChain tool ───────────────────────────────────
-@tool("skill_tool", description=my_skills.tool_description)
-def _skill_tool(action: str, arg: str = "") -> str:
-    return json.dumps(my_skills.skill_tool(action, arg), ensure_ascii=False)
-
-
-# ── 3. 多轮 tool-calling loop ─────────────────────────────────
-def run_once(prompt: str, log_name: str) -> None:
+# ── 4. 多轮 tool-calling loop ─────────────────────────────────
+def run_once(prompt: str, log_name: str, skills: Skills) -> None:
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         temperature=0.0,
@@ -85,12 +110,13 @@ def run_once(prompt: str, log_name: str) -> None:
         api_key=os.getenv("OPENAI_API_KEY"),
         timeout=120,
     )
-    llm_with_tools = llm.bind_tools([_skill_tool])
+    skill_tool = _make_skill_tool(skills)
+    llm_with_tools = llm.bind_tools([skill_tool])
 
     messages: list = [("user", prompt)]
     log_lines: list[str] = []
     log_file = Path(__file__).parent / log_name
-    max_rounds = 15  # 防止 LLM 无限循环
+    max_rounds = 15
 
     try:
         for _round in range(max_rounds):
@@ -109,7 +135,7 @@ def run_once(prompt: str, log_name: str) -> None:
                 print(tc_info)
                 log_lines.append(tc_info)
 
-                tool_result = _skill_tool.invoke(tc["args"])
+                tool_result = skill_tool.invoke(tc["args"])
                 result_info = f"  <- result: {tool_result[:300]}"
                 print(result_info)
                 log_lines.append(result_info)
@@ -138,17 +164,10 @@ def main() -> None:
 
     targets = ["read", "exec"] if args.scenario == "all" else [args.scenario]
     for name in targets:
-        log_name, prompt = SCENARIOS[name]
+        log_name, prompt, skills = SCENARIOS[name]
         print(f"\n================ {name.upper()} ================\n")
-        run_once(prompt, log_name)
+        run_once(prompt, log_name, skills)
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-

@@ -13,18 +13,18 @@
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
-
+执行 `magicskills install https://github.com/anthropics/skills.git -t ~/allskills`
 
 ### 创建skills
 
-执行 `magicskills createskills Windsurf_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills Windsurf_skills --skill-list c_2_ast doc-coauthoring --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
 执行 `magicskills syncskills Windsurf_skills --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
 '''md
-
+# AGENTS
 
 <skills_system priority="1">
 
@@ -47,13 +47,20 @@ Usage notes:
 <skill>
 <name>c_2_ast</name>
 <description>Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).</description>
-<path>/root/allskills/c_2_ast</path>
+<path>C:\Users\13978\allskills\c_2_ast</path>
+</skill>
+
+<skill>
+<name>doc-coauthoring</name>
+<description>Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.</description>
+<path>C:\Users\13978\allskills\doc-coauthoring</path>
 </skill>
 
 </available_skills>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
+
 
 '''
 

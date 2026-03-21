@@ -21,7 +21,13 @@ Usage notes:
 <skill>
 <name>c_2_ast</name>
 <description>Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).</description>
-<path>/root/allskills/c_2_ast</path>
+<path>C:\Users\13978\allskills\c_2_ast</path>
+</skill>
+
+<skill>
+<name>doc-coauthoring</name>
+<description>Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.</description>
+<path>C:\Users\13978\allskills\doc-coauthoring</path>
 </skill>
 
 </available_skills>

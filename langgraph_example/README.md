@@ -23,6 +23,8 @@ pip install -e .
 
 ## 3. 安装 skill
 
+以下演示两种安装方式，若 skill 已安装可跳过对应命令。
+
 ### 方式一：从本地安装（项目内置模板）
 
 ```bash
@@ -35,20 +37,20 @@ magicskills install skill_template -t ~/allskills
 magicskills install Narwhal-Lab/MagicSkills -t ~/allskills
 ```
 
-> `-t ~/allskills` 指定安装目录；上述两种方式二选一即可。
+> `-t ~/allskills` 指定安装目录。
 
 
 ## 4. 创建 skills
 
-本示例创建两个 skills 集合，分别对应两个 agent：
+本示例创建两个 skills 集合，分别对应两个 agent，每个 agent 拥有不同的工具组合：
 
 ```bash
-magicskills createskills langgraph_agent1_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md
-magicskills createskills langgraph_agent2_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md
+magicskills createskills langgraph_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
+magicskills createskills langgraph_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
 ```
 
-- **langgraph_agent1_skills**：用于 log1 场景（知识阅读 agent）
-- **langgraph_agent2_skills**：用于 log2 场景（代码执行 agent）
+- **langgraph_agent1_skills**：`c_2_ast` + `pdf`，用于 log1 场景（知识阅读 agent）
+- **langgraph_agent2_skills**：`c_2_ast` + `docx`，用于 log2 场景（代码执行 agent）
 
 
 ## 5. 生成 AGENTS.md
@@ -59,7 +61,7 @@ magicskills syncskills langgraph_agent1_skills --output ./AGENTS.md -y
 
 此时 AGENTS.md 会出现如下内容：
 
-```md
+```
 <skills_system priority="1">
 
 ## Available Skills
@@ -82,6 +84,12 @@ Usage notes:
 <name>c_2_ast</name>
 <description>Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).</description>
 <path>/root/allskills/c_2_ast</path>
+</skill>
+
+<skill>
+<name>pdf</name>
+<description>Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms. When Claude needs to fill in a PDF form or programmatically process, generate, or analyze PDF documents at scale.</description>
+<path>/root/allskills/pdf</path>
 </skill>
 
 </available_skills>
@@ -142,17 +150,17 @@ agent 会依次执行：`listskill` → `readskill`（读取 SKILL.md）→ `rea
 
 输入 prompt：
 
-```
+````
 请将下面这段 C 代码转换为 AST
-\`\`\`c
+```c
 #include <stdio.h>
 
 int main() {
     puts("Hello from agent");
     return 0;
 }
-\`\`\`
 ```
+````
 
 agent 会依次执行：`listskill` → `readskill`（读取 SKILL.md）→ `execskill`（运行转换脚本），产出 AST 结果。
 

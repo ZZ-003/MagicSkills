@@ -14,13 +14,11 @@
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
-
-
-
+执行 `magicskills install https://github.com/langchain-ai/deepagentsjs.git -t ~/allskills`
 
 ### 创建skills
 
-执行 `magicskills createskills claudecode --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills claudecode --skill-list c_2_ast arxiv-search --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
@@ -51,13 +49,20 @@ Usage notes:
 <skill>
 <name>c_2_ast</name>
 <description>Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).</description>
-<path>/root/allskills/c_2_ast</path>
+<path>C:\Users\13978\allskills\c_2_ast</path>
+</skill>
+
+<skill>
+<name>arxiv-search</name>
+<description>Search arXiv preprint repository for papers in physics, mathematics, computer science, quantitative biology, and related fields</description>
+<path>C:\Users\13978\allskills\arxiv-search</path>
 </skill>
 
 </available_skills>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
+
 
 ```
 
@@ -91,3 +96,7 @@ int main() {
 ```
 
 见log2.txt
+
+# 询问最近的计算机视觉相关论文
+
+见log3.txt

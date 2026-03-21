@@ -1,0 +1,137 @@
+❯ 最近有关计算机视觉的论文有哪些？ 
+
+● Web Search("2026 computer vision papers latest research 2025 CVPR ICCV ECCV")
+  ⎿  Did 0 searches in 471ms
+
+● Read(C:\Users\13978\allskills\arxiv-search\SKILL.md)
+  ⎿  Read 85 lines
+
+● Bash(ls "C:\Users\13978\allskills\arxiv-search\")
+
+● Bash(ls "C:/Users/13978/allskills/arxiv-search")
+  ⎿  arxiv_search.ts
+     SKILL.md
+
+● Bash(cd "C:/Users/13978/allskills/arxiv-search" && npx tsx arxiv_search.ts "computer vision 2025" --max-papers 10)
+  ⎿  npm warn exec The following package was not found and will be installed: tsx@4.21.0
+     Title: WiCV 2019: The Sixth Women In Computer Vision Workshop
+     Summary: In this paper we present the Women in Computer Vision Workshop - WiCV 2019, organized in conjunction with CVPR        
+     2019. This event is meant for increasing the visibility and inclusion of women researchers in the computer vision field.       
+     Computer vision and machine learning have made incredible progress over the past years, but the number of female
+     researchers is still low both in academia and in industry. WiCV is organized especially for the following reason: to raise     
+     visibility of female researchers, to increase collaborations between them, and to provide mentorship to female junior
+     researchers in the field. In this paper, we present a report of trends over the past years, along with a summary of
+     statistics regarding presenters, attendees, and sponsorship for the current workshop.
+
+     Title: 3rd Workshop on Maritime Computer Vision (MaCVi) 2025: Challenge Results
+     Summary: The 3rd Workshop on Maritime Computer Vision (MaCVi) 2025 addresses maritime computer vision for Unmanned Surface     
+     Vehicles (USV) and underwater. This report offers a comprehensive overview of the findings from the challenges. We provide     
+     both statistical and qualitative analyses, evaluating trends from over 700 submissions. All datasets, evaluation code, and     
+     the leaderboard are available to the public at https://macvi.org/workshop/macvi25.
+
+     Title: Spatial Monitoring and Insect Behavioural Analysis Using Computer Vision for Precision Pollination
+     Summary: Insects are the most important global pollinator of crops and play a key role in maintaining the sustainability of    
+      natural ecosystems. Insect pollination monitoring and management are therefore essential for improving crop production and    
+      food security. Computer vision facilitated pollinator monitoring can intensify data collection over what is feasible using    
+      manual approaches. The new data it generates may provide a detailed understanding of insect distributions and facilitate      
+     fine-grained analysis sufficient to predict their pollination efficacy and underpin precision pollination. Current computer    
+      vision facilitated insect tracking in complex outdoor environments is restricted in spatial coverage and often constrained    
+      to a single insect species. This limits its relevance to agriculture. Therefore, in this article we introduce a novel
+     system to facilitate markerless data capture for insect counting, insect motion tracking, behaviour analysis and
+     pollination prediction across large agricultural areas. Our system is comprised of edge computing multi-point video
+     recording, offline automated multispecies insect counting, tracking and behavioural analysis. We implement and test our        
+     system on a commercial berry farm to demonstrate its capabilities. Our system successfully tracked four insect varieties,      
+     at nine monitoring stations within polytunnels, obtaining an F-score above 0.8 for each variety. The system enabled
+     calculation of key metrics to assess the relative pollination impact of each insect variety. With this technological
+     advancement, detailed, ongoing data collection for precision pollination becomes achievable. This is important to inform       
+     growers and apiarists managing crop pollination, as it allows data-driven decisions to be made to improve food production      
+     and food security.
+
+     Title: TinyGiantVLM: A Lightweight Vision-Language Architecture for Spatial Reasoning under Resource Constraints
+     Summary: Reasoning about fine-grained spatial relationships in warehouse-scale environments poses a significant challenge      
+     for existing vision-language models (VLMs), which often struggle to comprehend 3D layouts, object arrangements, and
+     multimodal cues in real-world industrial settings. In this paper, we present TinyGiantVLM, a lightweight and modular
+     two-stage framework designed for physical spatial reasoning, distinguishing itself from traditional geographic reasoning in    
+      complex logistics scenes. Our approach encodes both global and region-level features from RGB and depth modalities using      
+     pretrained visual backbones. To effectively handle the complexity of high-modality inputs and diverse question types, we       
+     incorporate a Mixture-of-Experts (MoE) fusion module, which dynamically combines spatial representations to support
+     downstream reasoning tasks and improve convergence. Training is conducted in a two-phase strategy: the first phase focuses     
+     on generating free-form answers to enhance spatial reasoning ability, while the second phase uses normalized answers for       
+     evaluation. Evaluated on Track 3 of the AI City Challenge 2025, our 64M-parameter base model achieved 5th place on the
+     leaderboard with a score of 66.8861, demonstrating strong performance in bridging visual perception and spatial
+     understanding in industrial environments. We further present an 80M-parameter variant with expanded MoE capacity, which        
+     demonstrates improved performance on spatial reasoning tasks.
+
+     Title: Global Adaptive Filtering Layer for Computer Vision
+     Summary: We devise a universal adaptive neural layer to "learn" optimal frequency filter for each image together with the      
+     weights of the base neural network that performs some computer vision task. The proposed approach takes the source image in    
+      the spatial domain, automatically selects the best frequencies from the frequency domain, and transmits the
+     inverse-transform image to the main neural network. Remarkably, such a simple add-on layer dramatically improves the
+     performance of the main network regardless of its design. We observe that the light networks gain a noticeable boost in the    
+      performance metrics; whereas, the training of the heavy ones converges faster when our adaptive layer is allowed to
+     "learn" alongside the main architecture. We validate the idea in four classical computer vision tasks: classification,
+     segmentation, denoising, and erasing, considering popular natural and medical data benchmarks.
+
+     Title: WiCV at CVPR 2025: The Women in Computer Vision Workshop
+     Summary: The Women in Computer Vision Workshop (WiCV@CVPR 2025) was held in conjunction with the IEEE/CVF Conference on        
+     Computer Vision and Pattern Recognition (CVPR 2025) in Nashville, Tennessee, United States. This report presents an
+     overview of the workshop program, participation statistics, mentorship outcomes, and historical trends from previous WiCV      
+     editions. The goal is to document the impact and evolution of WiCV as a reference for future editions and for other
+     initiatives aimed at advancing diversity, equity, and inclusion within the AI and computer vision communities. WiCV@CVPR       
+     2025 marked the 16th edition of this long-standing event dedicated to increasing the visibility, inclusion, and
+     professional growth of women and underrepresented minorities in the computer vision community. This year's workshop
+     featured 14 accepted papers in the CVPR Workshop Proceedings out of 32 full-paper submissions. Five of these were selected     
+     for oral presentations, while all 14 were also presented as posters, along with 36 extended abstract posters accepted from     
+     62 short-paper submissions, which are not included in the proceedings. The mentoring program matched 80 mentees with 37        
+     mentors from both academia and industry. The 2025 edition attracted over 100 onsite participants, fostering rich technical     
+     and networking interactions across all career stages. Supported by 10 sponsors and approximately $44,000 USD in travel
+     grants and diversity awards, WiCV continued its mission to empower emerging researchers and amplify diverse voices in
+     computer vision.
+
+     Title: Dual-Path Enhancements in Event-Based Eye Tracking: Augmented Robustness and Adaptive Temporal Modeling
+     Summary: Event-based eye tracking has become a pivotal technology for augmented reality and human-computer interaction.        
+     Yet, existing methods struggle with real-world challenges such as abrupt eye movements and environmental noise. Building on    
+      the efficiency of the Lightweight Spatiotemporal Network-a causal architecture optimized for edge devices-we introduce two    
+      key advancements. First, a robust data augmentation pipeline incorporating temporal shift, spatial flip, and event
+     deletion improves model resilience, reducing Euclidean distance error by 12% (1.61 vs. 1.70 baseline) on challenging
+     samples. Second, we propose KnightPupil, a hybrid architecture combining an EfficientNet-B3 backbone for spatial feature       
+     extraction, a bidirectional GRU for contextual temporal modeling, and a Linear Time-Varying State-Space Module to adapt to     
+     sparse inputs and noise dynamically. Evaluated on the 3ET+ benchmark, our framework achieved 1.61 Euclidean distance on the    
+      private test set of the Event-based Eye Tracking Challenge at CVPR 2025, demonstrating its effectiveness for practical        
+     deployment in AR/VR systems while providing a foundation for future innovations in neuromorphic vision.
+
+     Title: VQualA 2025 Challenge on Engagement Prediction for Short Videos: Methods and Results
+     Summary: This paper presents an overview of the VQualA 2025 Challenge on Engagement Prediction for Short Videos, held in       
+     conjunction with ICCV 2025. The challenge focuses on understanding and modeling the popularity of user-generated content       
+     (UGC) short videos on social media platforms. To support this goal, the challenge uses a new short-form UGC dataset
+     featuring engagement metrics derived from real-world user interactions. This objective of the Challenge is to promote
+     robust modeling strategies that capture the complex factors influencing user engagement. Participants explored a variety of    
+      multi-modal features, including visual content, audio, and metadata provided by creators. The challenge attracted 97
+     participants and received 15 valid test submissions, contributing significantly to progress in short-form UGC video
+     engagement prediction.
+
+     Title: SIS-Challenge: Event-based Spatio-temporal Instance Segmentation Challenge at the CVPR 2025 Event-based Vision
+     Workshop
+     Summary: We present an overview of the Spatio-temporal Instance Segmentation (SIS) challenge held in conjunction with the      
+     CVPR 2025 Event-based Vision Workshop. The task is to predict accurate pixel-level segmentation masks of defined object        
+     classes from spatio-temporally aligned event camera and grayscale camera data. We provide an overview of the task, dataset,    
+      challenge details and results. Furthermore, we describe the methods used by the top-5 ranking teams in the challenge. More    
+      resources and code of the participants' methods are available here:
+     https://github.com/tub-rip/MouseSIS/blob/main/docs/challenge_results.md
+
+     Title: What Does TERRA-REF's High Resolution, Multi Sensor Plant Sensing Public Domain Data Offer the Computer Vision
+     Community?
+     Summary: A core objective of the TERRA-REF project was to generate an open-access reference dataset for the evaluation of      
+     sensing technologies to study plants under field conditions. The TERRA-REF program deployed a suite of high-resolution,        
+     cutting edge technology sensors on a gantry system with the aim of scanning 1 hectare (10$^4$) at around 1 mm$^2$ spatial      
+     resolution multiple times per week. The system contains co-located sensors including a stereo-pair RGB camera, a thermal       
+     imager, a laser scanner to capture 3D structure, and two hyperspectral cameras covering wavelengths of 300-2500nm. This        
+     sensor data is provided alongside over sixty types of traditional plant phenotype measurements that can be used to train       
+     new machine learning models. Associated weather and environmental measurements, information about agronomic management and     
+     experimental design, and the genomic sequences of hundreds of plant varieties have been collected and are available
+     alongside the sensor and plant phenotype data. Over the course of four years and ten growing seasons, the TERRA-REF system     
+     generated over 1 PB of sensor data and almost 45 million files. The subset that has been released to the public domain
+     accounts for two seasons and about half of the total data volume. This provides an unprecedented opportunity for
+     investigations far beyond the core biological scope of the project. The focus of this paper is to provide the Computer
+     Vision and Machine Learning communities an overview of the available data and some potential applications of this one of a     
+     kind data.

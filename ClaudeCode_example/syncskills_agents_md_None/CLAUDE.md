@@ -21,7 +21,13 @@ Usage notes:
 <skill>
 <name>c_2_ast</name>
 <description>Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).</description>
-<path>/root/allskills/c_2_ast</path>
+<path>C:\Users\13978\allskills\c_2_ast</path>
+</skill>
+
+<skill>
+<name>arxiv-search</name>
+<description>Search arXiv preprint repository for papers in physics, mathematics, computer science, quantitative biology, and related fields</description>
+<path>C:\Users\13978\allskills\arxiv-search</path>
 </skill>
 
 </available_skills>

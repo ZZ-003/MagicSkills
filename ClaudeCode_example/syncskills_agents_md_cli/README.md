@@ -14,13 +14,12 @@
 
 执行 `magicskills install skill_template  -t ~/allskills`
 
-
-
+执行 `magicskills install https://github.com/langchain-ai/deepagentsjs.git -t ~/allskills`
 
 
 ### 创建skills
 
-执行 `magicskills createskills claudecode --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills claudecode --skill-list c_2_ast langgraph-docs --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
@@ -74,3 +73,9 @@ int main() {
 ```
 
 见log2.txt
+
+# 询问 langraph 是什么
+
+我想知道 langraph 是什么
+
+见 log3.txt

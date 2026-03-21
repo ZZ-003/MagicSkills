@@ -109,7 +109,7 @@ cp .env.example .env
 ## 7. 安装依赖并运行
 
 ```bash
-pip install langchain-openai langgraph python-dotenv
+pip install -r langgraph_example/requirements.txt
 ```
 
 在项目根目录执行：

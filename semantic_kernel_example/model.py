@@ -1,8 +1,9 @@
-﻿"""Semantic Kernel function-calling example — progressive skill disclosure.
+"""Semantic Kernel function-calling example — progressive skill disclosure.
 
 Usage:
-    uv run --with semantic-kernel --with python-dotenv \
-        python semantic_kernel_example/model.py --scenario all
+    # First follow README.md setup steps, then:
+    pip install -r semantic_kernel_example/requirements.txt
+    python semantic_kernel_example/model.py --scenario all
 
 Env vars (put in .env):
     OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
@@ -15,7 +16,6 @@ import asyncio
 import io
 import json
 import os
-import re
 import sys
 from typing import Any
 from pathlib import Path
@@ -34,19 +34,69 @@ from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
 from semantic_kernel.functions import kernel_function
 
-from magicskills import ALL_SKILLS, Skills
+from magicskills import REGISTRY
+from magicskills.type.skills import Skills
 
 load_dotenv()
 
-# ── 场景配置：log1=不停读 / log2=有执行 ─────────────────────────
-SCENARIOS: dict[str, tuple[str, str]] = {
+_SETUP_HINT = """\
+Please follow the README.md setup steps to create skills collections first:
+  magicskills createskills semantic_kernel_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
+  magicskills createskills semantic_kernel_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
+"""
+
+
+# ── 1. Load skill collections from registry ────────────────────
+def _load_agent_skills() -> tuple[Skills, Skills]:
+    errors: list[str] = []
+    agent1_skills: Skills | None = None
+    agent2_skills: Skills | None = None
+
+    try:
+        agent1_skills = REGISTRY.get_skills("semantic_kernel_agent1_skills")
+    except KeyError:
+        errors.append("semantic_kernel_agent1_skills")
+
+    try:
+        agent2_skills = REGISTRY.get_skills("semantic_kernel_agent2_skills")
+    except KeyError:
+        errors.append("semantic_kernel_agent2_skills")
+
+    if errors:
+        print(f"Error: skills collection(s) not found: {errors}", file=sys.stderr)
+        print(_SETUP_HINT, file=sys.stderr)
+        sys.exit(1)
+
+    return agent1_skills, agent2_skills  # type: ignore[return-value]
+
+
+agent1_skills, agent2_skills = _load_agent_skills()
+
+
+# ── 2. Per-agent skill plugin factory ──────────────────────────
+def _make_skill_plugin(skills: Skills) -> object:
+    class MagicSkillsPlugin:
+        @kernel_function(
+            name="skill_tool",
+            description=skills.tool_description,
+        )
+        async def skill_tool(self, action: str, arg: str = "") -> str:
+            result = skills.skill_tool(action, arg)
+            return json.dumps(result, ensure_ascii=False)
+
+    return MagicSkillsPlugin()
+
+
+# ── 3. 场景配置 ─────────────────────────────────────────────────
+SCENARIOS: dict[str, tuple[str, str, Skills]] = {
     "read": (
         "log1.json",
-        "我想了解很多 AST 知识。",
+        "我想了解更多 AST 知识。",
+        agent1_skills,
     ),
     "exec": (
         "log2.json",
-        "Please help me convert the following C code into an AST.\n"
+        "请将下面这段 C 代码转换为 AST\n"
         "```c\n"
         "#include <stdio.h>\n\n"
         "int main() {\n"
@@ -54,82 +104,9 @@ SCENARIOS: dict[str, tuple[str, str]] = {
         "    return 0;\n"
         "}\n"
         "```",
+        agent2_skills,
     ),
 }
-
-# ── 1. 组装 Skills ─────────────────────────────────────────────
-def _resolve_required_skills() -> tuple[object, object]:
-    all_skills = ALL_SKILLS()
-    try:
-        return all_skills.get_skill("pdf"), all_skills.get_skill("c_2_ast")
-    except KeyError:
-        local_skills = Skills(paths=[ROOT / "skills"])
-        return local_skills.get_skill("pdf"), local_skills.get_skill("c_2_ast")
-
-
-skill_a, skill_b = _resolve_required_skills()
-
-my_skills = Skills(
-    name="semantic_kernel_skills",
-    skill_list=[skill_a, skill_b],
-)
-
-C2_AST_SCRIPTS = (ROOT / "skills" / "c_2_ast" / "scripts").resolve()
-PYTHON_EXE = Path(sys.executable).resolve()
-
-
-def _normalize_exec_arg(arg: str) -> str:
-    normalized = (arg or "").strip()
-    if not normalized:
-        return normalized
-
-    for pattern in (
-        r"skills_for_all_agent/skill/c_2_ast/scripts",
-        r"/root/\.agent/skills/c_2_ast/scripts",
-        r"/root/LLK/MagicSkills/crewai_example/\.claude/skills/c_2_ast/scripts",
-    ):
-        normalized = re.sub(pattern, lambda _m: str(C2_AST_SCRIPTS), normalized)
-
-    # Resolve known script names to absolute paths so commands do not depend on prior `cd`.
-    normalized = re.sub(
-        r"(^|&&\s*)(python3|python)\s+(save_c\.py|c_2_ast\.py)\b",
-        lambda m: f'{m.group(1)}{m.group(2)} "{C2_AST_SCRIPTS / m.group(3)}"',
-        normalized,
-    )
-
-    # Ensure execskill uses this process interpreter instead of host python3.
-    normalized = re.sub(
-        r"(^|&&\s*)(python3|python)(\s+)",
-        lambda m: f'{m.group(1)}"{PYTHON_EXE}"{m.group(3)}',
-        normalized,
-    )
-    normalized = normalized.replace("ls -la", "dir")
-    return normalized
-
-
-def _truncate_readskill_result(payload: dict[str, object], limit: int = 6000) -> dict[str, object]:
-    if payload.get("action") != "readskill" or not payload.get("ok"):
-        return payload
-    content = payload.get("result")
-    if isinstance(content, str) and len(content) > limit:
-        payload["result"] = content[:limit] + "\n...[TRUNCATED]..."
-    return payload
-
-
-# ── 2. 包装为 Semantic Kernel plugin ──────────────────────────
-def build_skill_tool_plugin(skills: Skills) -> object:
-    class MagicSkillsPlugin:
-        @kernel_function(
-            name="skill_tool",
-            description=skills.tool_description,
-        )
-        async def skill_tool(self, action: str, arg: str = "") -> str:
-            fixed_arg = _normalize_exec_arg(arg) if action == "execskill" else arg
-            result = skills.skill_tool(action, fixed_arg)
-            result = _truncate_readskill_result(result)
-            return json.dumps(result, ensure_ascii=False)
-
-    return MagicSkillsPlugin()
 
 
 def _dump_payload(value: Any) -> str:
@@ -147,8 +124,8 @@ def _record_message(log_lines: list[str], header: str, payload: Any) -> None:
     log_lines.extend([header, body])
 
 
-# ── 3. 构建 agent 并运行 ──────────────────────────────────────
-async def run_once(prompt: str, log_name: str) -> None:
+# ── 4. 构建 agent 并运行 ──────────────────────────────────────
+async def run_once(prompt: str, log_name: str, skills: Skills) -> None:
     chat_service = OpenAIChatCompletion(
         ai_model_id=os.getenv("OPENAI_MODEL"),
         async_client=AsyncOpenAI(
@@ -159,7 +136,8 @@ async def run_once(prompt: str, log_name: str) -> None:
 
     agent = ChatCompletionAgent(
         service=chat_service,
-        plugins=[build_skill_tool_plugin(my_skills)],
+        plugins=[_make_skill_plugin(skills)],
+        instructions="On Windows, use 'python' instead of 'python3' when running scripts.",
     )
 
     log_lines: list[str] = []
@@ -202,17 +180,10 @@ async def main() -> None:
 
     targets = ["read", "exec"] if args.scenario == "all" else [args.scenario]
     for name in targets:
-        log_name, prompt = SCENARIOS[name]
+        log_name, prompt, skills = SCENARIOS[name]
         print(f"\n================ {name.upper()} ================\n")
-        await run_once(prompt, log_name)
+        await run_once(prompt, log_name, skills)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-
-
-
-

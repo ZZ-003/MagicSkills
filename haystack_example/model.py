@@ -17,6 +17,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -35,6 +36,7 @@ from haystack.utils import Secret
 
 from magicskills import REGISTRY
 from magicskills.type.skills import Skills
+from magicskills.utils.utils import extract_yaml_field
 
 load_dotenv()
 
@@ -108,6 +110,147 @@ SCENARIOS: dict[str, tuple[str, str, Skills]] = {
 }
 
 
+def _compact_text(text: str | None, limit: int = 220) -> str:
+    """Collapse whitespace and trim long text for concise logs."""
+    normalized = " ".join((text or "").split())
+    if len(normalized) <= limit:
+        return normalized
+    return normalized[: limit - 3] + "..."
+
+
+def _preview_lines(text: str | None, max_lines: int = 4, max_chars: int = 260) -> str:
+    """Keep only the first few meaningful lines from long command output."""
+    lines = [line.rstrip() for line in (text or "").splitlines() if line.strip()]
+    if not lines:
+        return ""
+    preview = "\n".join(lines[:max_lines])
+    if len(lines) > max_lines:
+        preview += "\n..."
+    if len(preview) <= max_chars:
+        return preview
+    return preview[: max_chars - 3] + "..."
+
+
+def _summarize_skill_tool_result(payload: dict[str, Any], origin_args: dict[str, Any]) -> dict[str, Any]:
+    """Compress verbose MagicSkills tool payloads into high-signal summaries."""
+    action = str(payload.get("action") or origin_args.get("action") or "")
+    summary: dict[str, Any] = {"action": action, "ok": bool(payload.get("ok", False))}
+
+    if not summary["ok"]:
+        summary["error"] = _compact_text(str(payload.get("error", "")), limit=240)
+        return summary
+
+    result = payload.get("result")
+    if action == "listskill" and isinstance(result, list):
+        names = [str(item.get("name", "")) for item in result if isinstance(item, dict)]
+        summary["count"] = len(names)
+        summary["skills"] = names[:8]
+        return summary
+
+    if action == "readskill" and isinstance(result, str):
+        target = str(origin_args.get("arg", ""))
+        summary["target"] = target
+        summary["name"] = extract_yaml_field(result, "name") or (Path(target).stem if target else "")
+        summary["description"] = _compact_text(extract_yaml_field(result, "description"), limit=180)
+        return summary
+
+    if action == "execskill" and isinstance(result, dict):
+        command = str(result.get("command", ""))
+        stdout_preview = _preview_lines(str(result.get("stdout", "")))
+        stderr_preview = _preview_lines(str(result.get("stderr", "")))
+        summary["command"] = _compact_text(command, limit=180)
+        summary["returncode"] = int(result.get("returncode", 0))
+        if stdout_preview:
+            summary["stdout_preview"] = stdout_preview
+        if stderr_preview:
+            summary["stderr_preview"] = stderr_preview
+        return summary
+
+    summary["preview"] = _compact_text(json.dumps(result, ensure_ascii=False, default=str), limit=240)
+    return summary
+
+
+def _summarize_message(message: ChatMessage) -> list[dict[str, Any]]:
+    """Convert one Haystack ChatMessage into concise, structured log entries."""
+    entries: list[dict[str, Any]] = []
+    role = message.role.value
+
+    if role == "system":
+        return entries
+
+    if role == "user" and message.text:
+        return [{"type": "user", "text": _compact_text(message.text, limit=240)}]
+
+    if message.tool_calls:
+        for tool_call in message.tool_calls:
+            entry: dict[str, Any] = {
+                "type": "tool_call",
+                "tool": tool_call.tool_name,
+            }
+            if tool_call.tool_name == "skill_tool":
+                entry["action"] = tool_call.arguments.get("action", "")
+                arg = str(tool_call.arguments.get("arg", "") or "")
+                if arg:
+                    entry["arg"] = _compact_text(arg, limit=180)
+            else:
+                entry["arguments"] = tool_call.arguments
+            entries.append(entry)
+        return entries
+
+    if message.tool_call_results:
+        for tool_result in message.tool_call_results:
+            raw_result = tool_result.result
+            if isinstance(raw_result, str):
+                try:
+                    payload = json.loads(raw_result)
+                except json.JSONDecodeError:
+                    payload = None
+            else:
+                payload = None
+
+            if isinstance(payload, dict):
+                entries.append(
+                    {
+                        "type": "tool_result",
+                        **_summarize_skill_tool_result(payload, tool_result.origin.arguments),
+                    }
+                )
+            else:
+                entries.append(
+                    {
+                        "type": "tool_result",
+                        "tool": tool_result.origin.tool_name,
+                        "error": tool_result.error,
+                        "preview": _compact_text(str(raw_result), limit=240),
+                    }
+                )
+        return entries
+
+    if message.text:
+        entries.append({"type": "assistant", "text": _compact_text(message.text, limit=320)})
+    return entries
+
+
+def _summarize_run_result(prompt: str, result: dict[str, Any]) -> dict[str, Any]:
+    """Build a concise log payload from the verbose Haystack run result."""
+    raw_messages = result.get("messages", [])
+    steps: list[dict[str, Any]] = []
+    for message in raw_messages:
+        if isinstance(message, ChatMessage):
+            steps.extend(_summarize_message(message))
+
+    final_message = result.get("last_message")
+    final_answer = ""
+    if isinstance(final_message, ChatMessage) and final_message.text:
+        final_answer = _compact_text(final_message.text, limit=500)
+
+    return {
+        "prompt": _compact_text(prompt, limit=260),
+        "steps": steps,
+        "final_answer": final_answer,
+    }
+
+
 def run_once(prompt: str, log_name: str, skills: Skills) -> None:
     # ── 4. 构建 agent 并运行 ──────────────────────────────────
     generator = OpenAIChatGenerator(
@@ -121,14 +264,15 @@ def run_once(prompt: str, log_name: str, skills: Skills) -> None:
     agent = Agent(
         chat_generator=generator,
         tools=[_make_skill_tool(skills)],
-        system_prompt="Always call skill_tool in order: listskill, readskill, then execskill if needed.", # Haystack 框架限制，read 场景不加 system_prompt 就展示不了渐进式披露
+        # system_prompt="Always call skill_tool in order: listskill, readskill, then execskill if needed.", # Haystack 框架限制，read 场景不加 system_prompt 就展示不了渐进式披露
         max_agent_steps=20,
     )
 
     log_file = Path(__file__).parent / log_name
     try:
         result = agent.run(messages=[ChatMessage.from_user(prompt)])
-        log_content = json.dumps(result, ensure_ascii=False, indent=2, default=str)
+        summary = _summarize_run_result(prompt, result)
+        log_content = json.dumps(summary, ensure_ascii=False, indent=2)
         print(log_content)
     except BaseException:
         log_content = "[ERROR] Agent run interrupted or failed."

@@ -616,6 +616,12 @@ The first command shares the skill; the second reuses it.
 
 ---
 
+# ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Narwhal-Lab/MagicSkills&type=Date)](https://star-history.com/#Narwhal-Lab/MagicSkills&Date)
+
+---
+
 # 📜 License
 
 [MIT](LICENSE)
@@ -627,9 +633,3 @@ The first command shares the skill; the second reuses it.
 **Open-sourced and maintained by [Narwhal-Lab, Peking University](https://github.com/Narwhal-Lab)**
 
 </div>
-
----
-
-# ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Narwhal-Lab/MagicSkills&type=Date)](https://star-history.com/#Narwhal-Lab/MagicSkills&Date)

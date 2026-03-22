@@ -615,6 +615,12 @@ magicskills install my-skill
 
 ---
 
+# ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Narwhal-Lab/MagicSkills&type=Date)](https://star-history.com/#Narwhal-Lab/MagicSkills&Date)
+
+---
+
 # 📜 许可证
 
 [MIT](LICENSE)
@@ -626,9 +632,3 @@ magicskills install my-skill
 **由 [北京大学 Narwhal-Lab](https://github.com/Narwhal-Lab) 开源维护**
 
 </div>
-
----
-
-# ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Narwhal-Lab/MagicSkills&type=Date)](https://star-history.com/#Narwhal-Lab/MagicSkills&Date)

@@ -541,6 +541,14 @@ magicskills uploadskill ./skills/my-skill
 magicskills install my-skill
 ```
 
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request。
+
+如果是功能想法、工作流建议或较大的行为变更，建议先在 GitHub Discussions 或 Issue 里讨论需求和实现方向，再提交代码。
+
+详细要求见 [CONTRIBUTING.zh-CN.md](./CONTRIBUTING.zh-CN.md)；GitHub 默认识别的英文贡献指南见 [CONTRIBUTING.md](./CONTRIBUTING.md)。你也可以先在 [GitHub Discussions](https://github.com/Narwhal-Lab/MagicSkills/discussions) 发起讨论；仓库同时提供了 [`.github/`](./.github/) 下的 Issue / PR 模板。
+
 # ❓ FAQ
 
 ### 一个 skill 的最小结构是什么？

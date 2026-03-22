@@ -542,6 +542,14 @@ magicskills uploadskill ./skills/my-skill
 magicskills install my-skill
 ```
 
+## Contributing
+
+Issues and pull requests are welcome.
+
+For feature ideas, workflow proposals, or larger behavior changes, please start with a GitHub Discussion or an issue first so the motivation and implementation direction can be discussed before code is submitted.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution workflow, branch naming suggestions, commit message guidance, and pull request expectations. You can use [GitHub Discussions](https://github.com/Narwhal-Lab/MagicSkills/discussions) for early-stage ideas, and the repository also provides issue and PR templates under [`.github/`](./.github/).
+
 # ❓ FAQ
 
 ### What is the minimum structure of a skill?

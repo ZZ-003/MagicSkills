@@ -12,13 +12,13 @@
 
 ### 安装 skill(之前已经下载过的可以选择跳过)
 
-执行 `magicskills install skill_template  -t ~/allskills`
+执行 `magicskills install skill_template  -t ~/allskills` 选择从本地已经下载好的skill下载到目标路径里
 
-
+执行 `magicskills install https://github.com/anthropics/skills.git -t ~/allskills`将github上的下载到目标路径
 
 ### 创建skills
 
-执行 `magicskills createskills cursor_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills cursor_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
@@ -51,7 +51,7 @@ cursor一般会在当前目录下的所有AGENTS.md都添加到当前rules
 
 # 转换一段代码为AST代码
 
-请将下面这段 C 代码转换为 AST
+我想将下面这段 C 代码转换为 AST
 ```c
 #include <stdio.h>
 

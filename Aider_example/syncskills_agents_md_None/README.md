@@ -1,4 +1,16 @@
-# Cursor
+# Aider
+
+## 使用Aider
+python -m pip install aider-install
+aider-install
+
+cd /to/your/project
+
+export OPENAI_API_BASE={}
+export OPENAI_API_KEY={}
+
+aider --model openai/qwen3-max --subtree-only --no-auto-commits
+
 
 
 ## 安装magicskills
@@ -6,11 +18,10 @@
 首先 `git clone https://github.com/Narwhal-Lab/MagicSkills.git`
 
 并执行  `pip install -e .` 指令
+或者直接`pip install magicskills` 
 
-
-
+本文的示例 skill 以 **`docx`** 为例
 ### 安装 skill(之前已经下载过的可以选择跳过)
-
 
 执行 `magicskills install skill_template  -t ~/allskills` 选择从本地已经下载好的skill下载到目标路径里
 
@@ -18,14 +29,15 @@
 
 ### 创建skills
 
-执行 `magicskills createskills cursor_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
-
+执行 `magicskills createskills Aider_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
-执行 `magicskills syncskills cursor_skills --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
+执行 `magicskills syncskills Aider_skills  --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
-'''md
+
+```markdown
+# AGENTS
 
 <skills_system priority="1">
 
@@ -62,17 +74,14 @@ Usage notes:
 
 </skills_system>
 
-'''
+```
 
-# 设置cursor添加对应的AGENTS.md到它的rules里
 
 
 # 了解更多AST知识
 
 我想了解更多AST知识
-见image1.png
-
-
+见log1.txt
 
 # 转换一段代码为AST代码
 
@@ -86,4 +95,4 @@ int main() {
 }
 ```
 
-见image2.png
+见log2.txt

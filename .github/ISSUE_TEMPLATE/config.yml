@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/Narwhal-Lab/MagicSkills/discussions
+    about: Use Discussions for feature ideas, workflow proposals, open-ended design questions, and early-stage feedback before opening a pull request.

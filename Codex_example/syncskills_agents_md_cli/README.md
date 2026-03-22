@@ -18,13 +18,15 @@ MagicSkills/Codex_example/image/image1.png
 
 ### 安装 skill(之前已经下载过的可以选择跳过)
 
-执行 `magicskills install skill_template  -t ~/allskills`
+执行 `magicskills install skill_template  -t ~/allskills` 选择从本地已经下载好的skill下载到目标路径里
+
+执行 `magicskills install https://github.com/anthropics/skills.git -t ~/allskills`将github上的下载到目标路径
 
 
 
 ### 创建skills
 
-执行 `magicskills createskills codex_skills --skill-list c_2_ast --agent-md-path ./AGENTS.md`
+执行 `magicskills createskills codex_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
@@ -37,14 +39,13 @@ MagicSkills/Codex_example/image/image1.png
 
 <!-- SKILLS_TABLE_START -->
 <usage>
-Unified skill CLI tool. Use "magicskills skill-tool listskill --name codex_skills" to find relevant skills.
-Then use "magicskills skill-tool readskill --arg <path>" to read the selected skill's SKILL.md or related docs.
-If needed, use "magicskills skill-tool execskill --arg <command>" to run the command.
+Unified skill CLI tool. Whenever you receive a task, you must first run "magicskills skill-tool listskill --name codex_skills" to view all available skills.
+Then use "magicskills skill-tool readskill --arg <skill-or-path>" to read the relevant SKILL.md or related docs.
+Based on that documentation, either continue reading more docs with "magicskills skill-tool readskill --arg <path>" or run the needed command with "magicskills skill-tool execskill --arg <command>".
 </usage>
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
-
 '''
 
 

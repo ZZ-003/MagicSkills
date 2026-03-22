@@ -30,7 +30,7 @@ magicskills skill-tool listskill --name Aider_skills
 Tokens: 378 sent, 102 received.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Readonly: Aider_example/AGENTS.md                                                                                               
-> /run magicskills skill-tool listskill --name Aider_skills                                                                     
+> /run magicskills skill-tool listskill --name Aider_skills                 
 
 {
   "ok": true,
@@ -40,11 +40,16 @@ Readonly: Aider_example/AGENTS.md
       "name": "c_2_ast",
       "description": "Parse C source code into an Abstract Syntax Tree (AST). Use when analyzing C programs, understanding code structure, performing static analysis, or preparing code for further program analysis (e.g., CFG, DFG, vulnerability detection).",
       "path": "/root/allskills/c_2_ast/SKILL.md"
+    },
+    {
+      "name": "docx",
+      "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.",
+      "path": "/root/allskills/docx/SKILL.md"
     }
   ]
 }
-Add 0.1k tokens of command output to the chat? (Y)es/(N)o [Yes]: y                                                              
-Added 11 lines of output to the chat.
+Add 0.3k tokens of command output to the chat? (Y)es/(N)o [Yes]: y          
+Added 16 lines of output to the chat.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Readonly: Aider_example/AGENTS.md                                                                                               
 > /ask 我想了解更多AST知识。请给出下一步命令                                                                                    

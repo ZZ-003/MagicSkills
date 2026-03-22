@@ -15,6 +15,8 @@
 
 执行 `magicskills install https://github.com/anthropics/skills.git -t ~/allskills`
 
+> 说明：如果你只执行本地 `skill_template` 安装，通常只会得到 `c_2_ast`。本示例后续还要使用 `canvas-design`，所以如果本地还没有这个 skill，请执行从 `https://github.com/anthropics/skills.git` 安装的命令。
+
 ### 创建skills
 
 执行 `magicskills addskills Windsurf_skills --skill-list c_2_ast canvas-design --agent-md-path ./AGENTS.md`

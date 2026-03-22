@@ -38,6 +38,7 @@ magicskills install anthropics/skills -t ~/allskills
 ```
 
 > `-t ~/allskills` 指定安装目录。
+> 说明：如果你只执行方式一的 `skill_template` 安装，通常只会得到 `c_2_ast`。而本示例后续还要使用 `pdf` 和 `docx`，所以如果这两个 skill 还不存在，请执行方式二从 `anthropics/skills` 安装。
 
 
 ## 4. 创建 skills

@@ -5,7 +5,7 @@
 cd到Codex_example文件夹
 /init 在当前启动codex的目录下初始化一个AGENTS.md文件
 
-MagicSkills/Codex_example/image/image1.png
+
 
 ## 安装magicskills
 

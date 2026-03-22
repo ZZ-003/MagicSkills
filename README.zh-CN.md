@@ -5,8 +5,6 @@
 <br/>
 <br/>
 
-
-
 # 🪄 MagicSkills: **一次构建技能，供每个 Agent 复用**
 
 <br/>
@@ -30,7 +28,8 @@
 
 <br/>
 
-<sub>由北京大学 Narwhal-Lab 发起并维护</sub>
+`<sub>`由北京大学 Narwhal-Lab 发起并维护`</sub>`
+
 <p align="center">
   <a href="https://www.pku.edu.cn">
     <img src="./image/image4.png" alt="Peking University" height="42" />
@@ -40,17 +39,13 @@
   </a>
 </p>
 
-
 <p>
   <a href="https://github.com/Narwhal-Lab/MagicSkills"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10‑3.13"/></a>
-  &nbsp;
+   
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License: MIT"/></a>
-  &nbsp;
+   
   <a href="https://github.com/Narwhal-Lab/MagicSkills"><img src="https://img.shields.io/github/stars/Narwhal-Lab/MagicSkills?style=for-the-badge&logo=github" alt="GitHub stars"/></a>
 </p>
-
-
-
 
 <br/>
 <br/>
@@ -63,7 +58,8 @@
 
 ---
 
-<a id="overview-cn"></a>
+`<a id="overview-cn"></a>`
+
 ## 🧭 概览
 
 MagicSkills 是面向多 Agent 项目的本地优先 skill 基础设施层。
@@ -85,9 +81,14 @@ MagicSkills 是面向多 Agent 项目的本地优先 skill 基础设施层。
 MagicSkills 特别适合这些场景：
 
 - 你维护多个需要复用同一套 skill 库的 agent
-- 你已经有 `SKILL.md` 内容，但还没有安装或选配流程
+- 你已经有 `SKILL.md` 内容，但还没有安装、选配和同步流程
 - 某些 agent 读取 `AGENTS.md`，而另一些 agent 需要直接接入工具
-- 你希望 skill 管理保持透明且基于文件
+
+一个很常见的真实场景是：你有一个可复用的共享 skill，而多个不同的 Agent 应用和 Agent 框架都需要使用它。
+
+例如，同一个 `c_2_ast` skill，可能需要同时供 Claude Code、Cursor、Windsurf、Aider、Codex、AutoGen、CrewAI、LangChain、LangGraph、Haystack、Semantic Kernel、smolagents 和 LlamaIndex 使用。
+
+在这种情况下，推荐做法不是把这个 skill 分别复制到每个 agent 项目里，而是把它统一维护在共享 skill 池中，再基于同一份底层 skill 构建一个或多个命名的 `Skills` 集合，并根据目标运行时是读取 `AGENTS.md` 还是通过 tools / functions 接入，用不同方式把这份能力暴露出去。
 
 ## 🤔 为什么需要 MagicSkills
 
@@ -105,7 +106,8 @@ MagicSkills 通过分离以下几层来解决这些问题：
 - 每个 agent 实际应该看到的 skill 子集
 - 负责保存命名集合的持久化层
 
-<a id="quick-start-cn"></a>
+`<a id="quick-start-cn"></a>`
+
 ## 🚀 快速开始
 
 推荐的最短工作流如下：
@@ -113,7 +115,9 @@ MagicSkills 通过分离以下几层来解决这些问题：
 1. 安装 MagicSkills。
 2. 把一个或多个 skill 安装到本地池中。
 3. 为某个 agent 创建一个命名的 `Skills` 集合。
-4. 把这个集合同步到 `AGENTS.md`，或直接把它暴露为工具。
+4. 如果运行时会读取 `AGENTS.md`，就把这个集合同步到 `AGENTS.md`。
+5. 或者通过 CLI 工具接口暴露这个集合。
+6. 或者直接从 Python 暴露这个集合。
 
 ### 1. 📦 安装项目
 
@@ -136,19 +140,22 @@ magicskills -h
 ### 2. ⬇️ 安装 skill
 
 ```bash
-magicskills install anthropics/skills
+magicskills install anthropics/skills -t ~/allskills
+magicskills install skill_template -t ~/allskills
 ```
 
-默认情况下，安装的 skill 会被复制到 `./.claude/skills/`，随后就能在内置的 `Allskills` 视图中被发现。
+第一条命令演示的是从 GitHub 仓库安装。第二条命令使用当前仓库里的本地 `skill_template/` 目录，来模拟“你已经把 skill 下载到本地，现在要把它安装进共享目录”的常见场景。
 
-如果你是从非 GitHub 的页面、对象存储或内部文件服务下载的 `.zip`，先解压，再把解压后的本地目录传给 `install`：
+MagicSkills 默认支持四种标准安装位置：
 
-```bash
-unzip vendor-skills.zip -d ./tmp/vendor-skills
-magicskills install ./tmp/vendor-skills
-```
+- 当前项目：`./.claude/skills/`
+- `--global`：`~/.claude/skills/`
+- `--universal`：`./.agent/skills/`
+- `--global --universal`：`~/.agent/skills/`
 
-如果压缩包里只有一个 skill 目录，也可以在解压后直接安装那个目录。
+你也可以通过 `-t` / `--target` 显式指定任意路径。
+
+在实际使用里，我们更建议把 skill 统一安装到一个共享目录，比如 `~/allskills`。这样不同 agent 和框架都可以复用同一个本地 skill 池，并且都能从内置的 `Allskills` 视图中发现它们。
 
 ### 3. 🧩 创建一个 Agent 集合
 
@@ -158,7 +165,7 @@ magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent
 
 这表示：
 
-- 从 `Allskills` 中解析 `pdf` 和 `docx`
+- 从 `Allskills` 中找到 `pdf` 和 `docx` 这两个 skill
 - 创建一个名为 `agent1_skills` 的命名集合
 - 将 `/agent_workdir/AGENTS.md` 记为它的默认同步目标
 
@@ -182,7 +189,7 @@ magicskills syncskills agent1_skills --mode cli_description
 
 如果目标文件已经包含 skills 区块，就会替换；如果没有，就会追加一个新的区块。
 
-### 5. 🛠️ 或直接使用工具接口
+### 5. 🛠️ 或直接使用 CLI 工具接口
 
 对于不会读取 `AGENTS.md` 的 agent，可以直接使用统一的 CLI 工具入口：
 
@@ -192,9 +199,37 @@ magicskills skill-tool readskill --name agent1_skills --arg pdf
 magicskills skill-tool execskill --name agent1_skills --arg "echo hello"
 ```
 
-## 🐍 Python 示例
+### 6. 🐍 或直接从 Python 暴露同一套接口
 
-如果你要把 MagicSkills 接入某个 agent 框架，Python 侧可以尽量保持简洁：
+如果你要把 MagicSkills 接入某个 agent 框架，Python 侧通常有两种常见写法。
+
+**方式一：复用已经通过 CLI 创建好的集合**
+
+如果你已经先通过下面这条命令创建过集合：
+
+```bash
+magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
+```
+
+那么 Python 里可以直接通过 `REGISTRY.get_skills("agent1_skills")` 复用这个命名集合：
+
+```python
+import json
+
+from langchain_core.tools import tool
+from magicskills import REGISTRY
+
+agent1_skills = REGISTRY.get_skills("agent1_skills")
+
+
+@tool("_skill_tool", description=agent1_skills.tool_description)
+def _skill_tool(action: str, arg: str = "") -> str:
+    return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
+```
+
+**方式二：直接在 Python 里构造一个临时集合**
+
+如果你不想依赖预先创建好的注册表项，也可以手动构造 `Skills(...)`：
 
 ```python
 import json
@@ -216,11 +251,32 @@ def _skill_tool(action: str, arg: str = "") -> str:
     return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
 ```
 
-如果你的运行时会读取 `AGENTS.md`，用 `syncskills`。如果不会，直接使用 `skill_tool` 或 Python API 即可。
+第二种写法默认只是当前进程里的临时对象，不会自动写入注册表，因此不会和 CLI 创建的同名集合冲突；只有你显式通过 `REGISTRY` 注册并保存时，它才会变成持久化集合。
+
+如果你的运行时会读取 `AGENTS.md`，用 `syncskills`。如果不会，直接使用 CLI 工具接口或 Python API 即可。
 
 ## 🧪 示例与生态集成
 
 MagicSkills 同时提供了两类集成示例：一类是能直接读取 `AGENTS.md` 的 agent / IDE 产品，另一类是通过 tools 或 functions 接入的主流 agent 框架。
+
+### 同一个共享 skill，接入多个 Agent
+
+一个很常见的真实场景是：你有一个可复用的公共 skill，而多个不同的 Agent 应用和 Agent 框架都需要使用它。
+
+例如，同一个 `c_2_ast` skill，可能需要同时供 Claude Code、Cursor、Windsurf、Aider、Codex、AutoGen、CrewAI、LangChain、LangGraph、Haystack、Semantic Kernel、smolagents 和 LlamaIndex 使用。
+
+在这种情况下，推荐做法不是把这个 skill 分别复制到每个 agent 项目里，而是：
+
+1. 先把这个 skill 统一安装或维护在一个共享 skill 池中。
+2. 再基于这同一份底层 skill，构建一个或多个命名的 `Skills` 集合。
+3. 最后根据目标 agent 的接入方式，用不同形式把这份能力暴露出去。
+
+本仓库里的 examples 展示的正是两条主要接入路径：
+
+- 对于能直接读取 `AGENTS.md` 的 Agent 应用，使用 `addskills + syncskills` 把选定的 skill 子集同步到各自的 `AGENTS.md`
+- 对于通过 tools / functions 接入的 Agent 框架，则通过 `magicskills skill-tool` 或 `skills.skill_tool()` 暴露同一份能力集合
+
+所以，虽然这些 examples 面向的是不同的产品和框架，但它们本质上都在演示同一个核心场景：同一个共享 skill，如何在多个不同运行时中被复用。
 
 ### 可直接读取 `AGENTS.md` 的 Agent / IDE
 
@@ -248,7 +304,8 @@ MagicSkills 同时提供了两类集成示例：一类是能直接读取 `AGENTS
 - [Python API](./doc/python-api.zh-CN.md)：对象与函数参考
 - [使用建议](#tips-cn)：集成指导
 
-<a id="how-it-works-cn"></a>
+`<a id="how-it-works-cn"></a>`
+
 # ⚙️ 工作原理
 
 ## 🧠 核心思想
@@ -370,31 +427,33 @@ demo-skill/
 
 所以本质上，Registry 层是 MagicSkills 的项目级配置中心。`Skill` 定义单体，`Skills` 组织工作集，而 `REGISTRY` 让这些集合能跨不同运行周期持续存在。
 
-<a id="cli-cn"></a>
+`<a id="cli-cn"></a>`
+
 # 🛠️ CLI
 
 完整 CLI 参考文档已迁移至 [doc/cli.zh-CN.md](./doc/cli.zh-CN.md)。
 英文版见 [doc/cli.md](./doc/cli.md)。
 
-| 命令 | 使用场景 | 主要能力 |
-| ------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
-| `listskill` | 查看当前内置集合中有哪些 skill | 列出 skill 名称、描述和 `SKILL.md` 路径 |
-| `readskill` | 读取某个 skill 的说明或任意本地文本文件 | 按 skill 名称或文件路径输出内容 |
-| `execskill` | 在当前工作目录执行命令 | 支持流式输出、JSON 输出、no-shell 模式和自定义路径 |
-| `syncskills` | 将一个命名的 skills 集合同步到 `AGENTS.md` | 生成或替换 `<skills_system>` 区块 |
-| `install` | 从本地路径、Git 仓库或默认来源安装 skill | 复制 skill 文件并将其注册到 `Allskills` |
-| `addskill` | 将现有 skill 注册到某个集合中 | 只注册元数据，不复制文件 |
-| `uploadskill` | 将本地 skill 提交到默认 MagicSkills 仓库 | 自动化执行 fork、push 和 PR 流程 |
-| `deleteskill` | 从某个集合中删除一个 skill，或全局删除 | 从命名集合中移除，或从 `Allskills` 删除目录并清理引用 |
-| `showskill` | 查看某个 skill 包的完整内容 | 展示元数据以及 skill 目录中的全部文件 |
-| `addskills` | 创建一个命名的 skills 集合 | 为某个 agent 或团队构建隔离的 skill 集 |
-| `listskills` | 列出所有命名的 skills 集合 | 输出人类可读格式或 JSON 格式 |
-| `deleteskills` | 删除一个或多个命名的 skills 集合 | 只删除集合注册信息，不删除 skill 文件 |
-| `changetooldescription` | 修改集合的 `tool_description` 元数据 | 更新面向 tool 的描述，供后续查询和集成使用 |
-| `changeclidescription` | 修改集合的 `cli_description` 元数据 | 更新面向 CLI 的描述，供后续查询和集成使用 |
-| `skill-tool` | 以工具函数风格调用 skill 能力 | 用统一的 JSON 输出分发 list/read/exec |
+| 命令                      | 使用场景                                     | 主要能力                                                |
+| ------------------------- | -------------------------------------------- | ------------------------------------------------------- |
+| `listskill`             | 查看当前内置集合中有哪些 skill               | 列出 skill 名称、描述和 `SKILL.md` 路径               |
+| `readskill`             | 读取某个 skill 的说明或任意本地文本文件      | 按 skill 名称或文件路径输出内容                         |
+| `execskill`             | 在当前工作目录执行命令                       | 支持流式输出、JSON 输出、no-shell 模式和自定义路径      |
+| `syncskills`            | 将一个命名的 skills 集合同步到 `AGENTS.md` | 生成或替换 `<skills_system>` 区块                     |
+| `install`               | 从本地路径、Git 仓库或默认来源安装 skill     | 复制 skill 文件并将其注册到 `Allskills`               |
+| `addskill`              | 将现有 skill 注册到某个集合中                | 只注册元数据，不复制文件                                |
+| `uploadskill`           | 将本地 skill 提交到默认 MagicSkills 仓库     | 自动化执行 fork、push 和 PR 流程                        |
+| `deleteskill`           | 从某个集合中删除一个 skill，或全局删除       | 从命名集合中移除，或从 `Allskills` 删除目录并清理引用 |
+| `showskill`             | 查看某个 skill 包的完整内容                  | 展示元数据以及 skill 目录中的全部文件                   |
+| `addskills`             | 创建一个命名的 skills 集合                   | 为某个 agent 或团队构建隔离的 skill 集                  |
+| `listskills`            | 列出所有命名的 skills 集合                   | 输出人类可读格式或 JSON 格式                            |
+| `deleteskills`          | 删除一个或多个命名的 skills 集合             | 只删除集合注册信息，不删除 skill 文件                   |
+| `changetooldescription` | 修改集合的 `tool_description` 元数据       | 更新面向 tool 的描述，供后续查询和集成使用              |
+| `changeclidescription`  | 修改集合的 `cli_description` 元数据        | 更新面向 CLI 的描述，供后续查询和集成使用               |
+| `skill-tool`            | 以工具函数风格调用 skill 能力                | 用统一的 JSON 输出分发 list/read/exec                   |
 
-<a id="python-api-cn"></a>
+`<a id="python-api-cn"></a>`
+
 # 🐍 Python API
 
 完整 Python API 参考文档已迁移至 [doc/python-api.zh-CN.md](./doc/python-api.zh-CN.md)。
@@ -430,7 +489,8 @@ from magicskills import (
 - `changetooldescription` 是 `change_tool_description` 的兼容别名，两者等价。
 - `changeclidescription` 是 `change_cli_description` 的兼容别名，两者等价。
 
-<a id="tips-cn"></a>
+`<a id="tips-cn"></a>`
+
 # 💡 使用建议
 
 ## 🧾 通过 `AGENTS.md` 集成
@@ -486,7 +546,26 @@ Python API 入口：
 agent1_skills.skill_tool(action: str, arg: str = "")
 ```
 
-例如：
+示例 A，复用已经通过 CLI 创建好的命名集合：
+
+```python
+import json
+
+from langchain_core.tools import tool
+from magicskills import REGISTRY
+
+agent1_skills = REGISTRY.get_skills("agent1_skills")
+
+print(agent1_skills.skill_tool("listskill"))
+print(agent1_skills.skill_tool("readskill", "<path>"))
+print(agent1_skills.skill_tool("execskill", "<command>"))
+
+@tool("_skill_tool", description=agent1_skills.tool_description)
+def _skill_tool(action: str, arg: str = "") -> str:
+    return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
+```
+
+示例 B，直接构造一个临时的内存集合：
 
 ```python
 import json
@@ -495,7 +574,7 @@ from langchain_core.tools import tool
 from magicskills import ALL_SKILLS, Skills
 
 skill_a = ALL_SKILLS().get_skill("pdf")
-skill_b = ALL_SKILLS().get_skill("docx")  # 换成你自己的第二个 skill 名称或路径
+skill_b = ALL_SKILLS().get_skill("docx")
 
 agent1_skills = Skills(
     skill_list=[skill_a, skill_b],
@@ -510,6 +589,8 @@ print(agent1_skills.skill_tool("execskill", "<command>"))
 def _skill_tool(action: str, arg: str = "") -> str:
     return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
 ```
+
+如果 `agent1_skills` 已经通过 CLI 创建过，示例 A 是 Python 侧最直接的接入方式。示例 B 更适合只想在当前进程里临时构造一个集合的场景；它默认不会进入持久化注册表，除非你显式通过 `REGISTRY` 注册并保存。
 
 这种方式适合两类场景：
 
@@ -620,6 +701,14 @@ magicskills install my-skill
 
 - **Python** 3.10 / 3.11 / 3.12 / 3.13
 - **Git**（用于从远程仓库安装 skill）
+
+---
+
+# 🤝 贡献者
+
+<a href="https://github.com/Narwhal-Lab/MagicSkills/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Narwhal-Lab/MagicSkills" alt="Contributors" />
+</a>
 
 ---
 

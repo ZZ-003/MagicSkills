@@ -85,9 +85,14 @@ The core model is simple:
 MagicSkills is most useful when:
 
 - you maintain multiple agents that should reuse one skill library
-- you already have `SKILL.md` content but no install/selection workflow
+- you already have `SKILL.md` content but no install, selection, or sync workflow
 - some agents read `AGENTS.md`, while others need direct tool integration
-- you want skill management to stay transparent and file-based
+
+A common real-world scenario is: you have one reusable shared skill, and many different agent apps and agent frameworks all need to use it.
+
+For example, the same `c_2_ast` skill may need to be shared across Claude Code, Cursor, Windsurf, Aider, Codex, AutoGen, CrewAI, LangChain, LangGraph, Haystack, Semantic Kernel, smolagents, and LlamaIndex.
+
+In that case, the recommended approach is not to copy that skill into every agent project separately. Instead, keep it in one shared skill pool, build one or more named `Skills` collections from that same underlying skill, and expose those collections differently depending on whether the target runtime reads `AGENTS.md` or integrates through tools / functions.
 
 ## 🤔 Why MagicSkills
 
@@ -113,7 +118,9 @@ The shortest recommended workflow is:
 1. Install MagicSkills.
 2. Install one or more skills into the local pool.
 3. Create a named `Skills` collection for one agent.
-4. Sync that collection to `AGENTS.md` or expose it as a tool.
+4. Sync that collection to `AGENTS.md` if the runtime reads `AGENTS.md`.
+5. Or expose that collection through the CLI tool interface.
+6. Or expose that collection from Python.
 
 ### 1. 📦 Install The Project
 
@@ -136,19 +143,22 @@ magicskills -h
 ### 2. ⬇️ Install Skills
 
 ```bash
-magicskills install anthropics/skills
+magicskills install anthropics/skills -t ~/allskills
+magicskills install skill_template -t ~/allskills
 ```
 
-By default, installed skills are copied into `./.claude/skills/` and then become discoverable from the built-in `Allskills` view.
+The first command shows installing from a GitHub repository. The second command uses this repo's local `skill_template/` directory to simulate the common case where you have already downloaded skills locally and now want to install them into the shared pool.
 
-If you downloaded a skill bundle as a non-GitHub `.zip`, unzip it first and then install the extracted local directory:
+MagicSkills supports four standard install locations by default:
 
-```bash
-unzip vendor-skills.zip -d ./tmp/vendor-skills
-magicskills install ./tmp/vendor-skills
-```
+- current project: `./.claude/skills/`
+- `--global`: `~/.claude/skills/`
+- `--universal`: `./.agent/skills/`
+- `--global --universal`: `~/.agent/skills/`
 
-If the archive contains only one skill directory, you can also install that extracted directory directly.
+You can also use `-t` / `--target` to install into any explicit path.
+
+In practice, we recommend using one shared skills root such as `~/allskills`, so all agents and frameworks can reuse the same local skill pool and discover them from the built-in `Allskills` view.
 
 ### 3. 🧩 Create One Agent Collection
 
@@ -158,7 +168,7 @@ magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent
 
 This means:
 
-- resolve `pdf` and `docx` from `Allskills`
+- find the `pdf` and `docx` skills from `Allskills`
 - create a named collection called `agent1_skills`
 - remember `/agent_workdir/AGENTS.md` as its default sync target
 
@@ -182,7 +192,7 @@ magicskills syncskills agent1_skills --mode cli_description
 
 If the target file already contains a skills section, it is replaced. If not, a new one is appended.
 
-### 5. 🛠️ Or Use The Tool Interface Directly
+### 5. 🛠️ Or Use The CLI Tool Interface Directly
 
 For agents that do not read `AGENTS.md`, use the unified CLI tool entrypoint:
 
@@ -192,9 +202,37 @@ magicskills skill-tool readskill --name agent1_skills --arg pdf
 magicskills skill-tool execskill --name agent1_skills --arg "echo hello"
 ```
 
-## 🐍 Python Example
+### 6. 🐍 Or Expose The Same Interface From Python
 
-If you are integrating MagicSkills into an agent framework, keep the Python side minimal:
+If you are integrating MagicSkills into an agent framework, there are two common Python-side patterns.
+
+**Option A: reuse a collection already created by the CLI**
+
+If you already created the collection with:
+
+```bash
+magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
+```
+
+then Python can reuse that same named collection directly through `REGISTRY.get_skills("agent1_skills")`:
+
+```python
+import json
+
+from langchain_core.tools import tool
+from magicskills import REGISTRY
+
+agent1_skills = REGISTRY.get_skills("agent1_skills")
+
+
+@tool("_skill_tool", description=agent1_skills.tool_description)
+def _skill_tool(action: str, arg: str = "") -> str:
+    return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
+```
+
+**Option B: build a temporary collection directly in Python**
+
+If you do not want to depend on a pre-created registry entry, you can also construct a `Skills(...)` object manually:
 
 ```python
 import json
@@ -216,11 +254,32 @@ def _skill_tool(action: str, arg: str = "") -> str:
     return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
 ```
 
-Use `syncskills` if your runtime consumes `AGENTS.md`. Use `skill_tool` or the Python API directly if it does not.
+This second form stays in memory only. A plain `Skills(...)` object is not persisted into the registry automatically, so it does not conflict with CLI-created collections unless you explicitly register and save it through `REGISTRY`.
+
+Use `syncskills` if your runtime consumes `AGENTS.md`. Use the CLI tool interface or the Python API directly if it does not.
 
 ## 🧪 Examples and Ecosystem Integrations
 
 MagicSkills provides integration examples for both agent / IDE products that can directly read `AGENTS.md` and mainstream agent frameworks that integrate through tools or functions.
+
+### One Shared Skill Across Many Agents
+
+A common real-world scenario is: you have one reusable skill, and many different agent products or agent frameworks all need to use it.
+
+For example, the same `c_2_ast` skill may need to be shared across Claude Code, Cursor, Windsurf, Aider, Codex, AutoGen, CrewAI, LangChain, LangGraph, Haystack, Semantic Kernel, smolagents, and LlamaIndex.
+
+In that case, the recommended approach is not to copy the skill into every agent project separately. Instead:
+
+1. Maintain or install the skill once in a shared skill pool.
+2. Build one or more named `Skills` collections from that same underlying skill.
+3. Expose those collections differently depending on how the target agent integrates.
+
+This repository's examples show the two main integration paths:
+
+- for agent apps that can read `AGENTS.md`, use `addskills + syncskills` to sync the chosen skill subset into each target agent's `AGENTS.md`
+- for agent frameworks that integrate through tools or functions, expose the same collection through `magicskills skill-tool` or `skills.skill_tool()`
+
+So although the examples target different products and frameworks, they are all implementations of the same core scenario: one shared skill, reused across many different runtimes.
 
 ### Agent / IDEs that can read `AGENTS.md`
 
@@ -487,7 +546,26 @@ Python API entrypoint:
 agent1_skills.skill_tool(action: str, arg: str = "")
 ```
 
-For example:
+Example A, reuse a CLI-created named collection:
+
+```python
+import json
+
+from langchain_core.tools import tool
+from magicskills import REGISTRY
+
+agent1_skills = REGISTRY.get_skills("agent1_skills")
+
+print(agent1_skills.skill_tool("listskill"))
+print(agent1_skills.skill_tool("readskill", "<path>"))
+print(agent1_skills.skill_tool("execskill", "<command>"))
+
+@tool("_skill_tool", description=agent1_skills.tool_description)
+def _skill_tool(action: str, arg: str = "") -> str:
+    return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
+```
+
+Example B, build a temporary in-memory collection directly:
 
 ```python
 import json
@@ -496,7 +574,7 @@ from langchain_core.tools import tool
 from magicskills import ALL_SKILLS, Skills
 
 skill_a = ALL_SKILLS().get_skill("pdf")
-skill_b = ALL_SKILLS().get_skill("docx")  # Replace with your own second skill name or path
+skill_b = ALL_SKILLS().get_skill("docx")
 
 agent1_skills = Skills(
     skill_list=[skill_a, skill_b],
@@ -511,6 +589,8 @@ print(agent1_skills.skill_tool("execskill", "<command>"))
 def _skill_tool(action: str, arg: str = "") -> str:
     return json.dumps(agent1_skills.skill_tool(action, arg), ensure_ascii=False)
 ```
+
+If `agent1_skills` was already created through the CLI, Example A is the most direct Python-side entrypoint. Example B is useful when you only want a temporary collection in the current process. It does not enter the persistent registry unless you explicitly register and save it through `REGISTRY`.
 
 This approach fits two kinds of scenarios:
 
@@ -621,6 +701,14 @@ The first command shares the skill; the second reuses it.
 
 - **Python** 3.10 / 3.11 / 3.12 / 3.13
 - **Git** (used to install skills from remote repositories)
+
+---
+
+# 🤝 Contributors
+
+<a href="https://github.com/Narwhal-Lab/MagicSkills/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Narwhal-Lab/MagicSkills" alt="Contributors" />
+</a>
 
 ---
 

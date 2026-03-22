@@ -18,11 +18,11 @@
 
 ### 创建skills
 
-执行 `magicskills createskills claudecode --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
+执行 `magicskills addskills claudecode --skill-list c_2_ast docx --agent-md-path ./AGENTS.md`
 
 ### 生成 AGETNS.md
 
-执行 `magicskills syncskills claudecode   --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`createskills`指定的`--agent-md-path ./AGENTS.md`
+执行 `magicskills syncskills claudecode   --output ./AGENTS.md -y` 指定输出AGENTS.md路径，不指定时候就默认用`addskills`指定的`--agent-md-path ./AGENTS.md`
 此时AGENTS.md会出现如下内容
 
 ```markdown

@@ -45,8 +45,8 @@ load_dotenv()
 
 _SETUP_HINT = """\
 Please follow the README.md setup steps to create skills collections first:
-  magicskills createskills autogen_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
-  magicskills createskills autogen_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
+  magicskills addskills autogen_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
+  magicskills addskills autogen_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
 """
 
 PYTHON_EXE = Path(sys.executable).resolve()

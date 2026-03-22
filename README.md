@@ -143,7 +143,10 @@ magicskills -h
 ### 2. ⬇️ Install Skills
 
 ```bash
+# remote repository example
 magicskills install anthropics/skills -t ~/allskills
+
+# local directory example (if you cloned this repo)
 magicskills install skill_template -t ~/allskills
 ```
 
@@ -161,6 +164,8 @@ You can also use `-t` / `--target` to install into any explicit path.
 In practice, we recommend using one shared skills root such as `~/allskills`, so all agents and frameworks can reuse the same local skill pool and discover them from the built-in `Allskills` view.
 
 ### 3. 🧩 Create One Agent Collection
+
+Here `pdf` and `docx` are example skill names. Replace them with the skills currently available in your own `Allskills` view. If you only installed this repo's local `skill_template/`, use `c_2_ast` here instead.
 
 ```bash
 magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md

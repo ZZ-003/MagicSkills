@@ -34,7 +34,7 @@ magicskills install skill_template -t ~/allskills
 ### 方式二：从 GitHub 安装
 
 ```bash
-magicskills install Narwhal-Lab/MagicSkills -t ~/allskills
+magicskills install anthropics/skills -t ~/allskills
 ```
 
 > `-t ~/allskills` 指定安装目录。
@@ -45,8 +45,8 @@ magicskills install Narwhal-Lab/MagicSkills -t ~/allskills
 本示例创建两个 skills 集合，分别对应两个 agent，每个 agent 拥有不同的工具组合：
 
 ```bash
-magicskills createskills crewai_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
-magicskills createskills crewai_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
+magicskills addskills crewai_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
+magicskills addskills crewai_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
 ```
 
 - **crewai_agent1_skills**：`c_2_ast` + `pdf`，用于 log1 场景（知识阅读 agent）
@@ -139,7 +139,7 @@ agent 会依次执行：`listskill` → `readskill`（读取 SKILL.md）→ `exe
 
 
 ## 10. 常见问题
-- 如果报 `skills collection(s) not found`：请先按第 4 步执行 `createskills` 命令。
+- 如果报 `skills collection(s) not found`：请先按第 4 步执行 `addskills` 命令。
 - 如果报认证错误：检查 `.env` 中的 key、base_url、model 是否可用。
 - 如果报网络错误：确认当前环境可访问配置的模型服务。
 - 如果日志为空：重跑命令并查看终端输出中的异常栈信息。

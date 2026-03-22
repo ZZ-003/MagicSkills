@@ -28,7 +28,7 @@
 
 <br/>
 
-`<sub>`由北京大学 Narwhal-Lab 发起并维护`</sub>`
+<sub>由北京大学 Narwhal-Lab 发起并维护</sub>
 
 <p align="center">
   <a href="https://www.pku.edu.cn">
@@ -58,7 +58,7 @@
 
 ---
 
-`<a id="overview-cn"></a>`
+<a id="overview-cn"></a>
 
 ## 🧭 概览
 
@@ -106,7 +106,7 @@ MagicSkills 通过分离以下几层来解决这些问题：
 - 每个 agent 实际应该看到的 skill 子集
 - 负责保存命名集合的持久化层
 
-`<a id="quick-start-cn"></a>`
+<a id="quick-start-cn"></a>
 
 ## 🚀 快速开始
 
@@ -140,7 +140,10 @@ magicskills -h
 ### 2. ⬇️ 安装 skill
 
 ```bash
+# 远程仓库示例
 magicskills install anthropics/skills -t ~/allskills
+
+# 本地目录示例（如果你已经 clone 了当前仓库）
 magicskills install skill_template -t ~/allskills
 ```
 
@@ -158,6 +161,8 @@ MagicSkills 默认支持四种标准安装位置：
 在实际使用里，我们更建议把 skill 统一安装到一个共享目录，比如 `~/allskills`。这样不同 agent 和框架都可以复用同一个本地 skill 池，并且都能从内置的 `Allskills` 视图中发现它们。
 
 ### 3. 🧩 创建一个 Agent 集合
+
+这里的 `pdf` 和 `docx` 只是示例 skill 名称。你应该替换成自己当前 `Allskills` 视图里已经存在的 skill。如果你只安装了当前仓库里的本地 `skill_template/`，这里就改成 `c_2_ast`。
 
 ```bash
 magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
@@ -304,7 +309,7 @@ MagicSkills 同时提供了两类集成示例：一类是能直接读取 `AGENTS
 - [Python API](./doc/python-api.zh-CN.md)：对象与函数参考
 - [使用建议](#tips-cn)：集成指导
 
-`<a id="how-it-works-cn"></a>`
+<a id="how-it-works-cn"></a>
 
 # ⚙️ 工作原理
 
@@ -427,7 +432,7 @@ demo-skill/
 
 所以本质上，Registry 层是 MagicSkills 的项目级配置中心。`Skill` 定义单体，`Skills` 组织工作集，而 `REGISTRY` 让这些集合能跨不同运行周期持续存在。
 
-`<a id="cli-cn"></a>`
+<a id="cli-cn"></a>
 
 # 🛠️ CLI
 
@@ -452,7 +457,7 @@ demo-skill/
 | `changeclidescription`  | 修改集合的 `cli_description` 元数据        | 更新面向 CLI 的描述，供后续查询和集成使用               |
 | `skill-tool`            | 以工具函数风格调用 skill 能力                | 用统一的 JSON 输出分发 list/read/exec                   |
 
-`<a id="python-api-cn"></a>`
+<a id="python-api-cn"></a>
 
 # 🐍 Python API
 
@@ -489,7 +494,7 @@ from magicskills import (
 - `changetooldescription` 是 `change_tool_description` 的兼容别名，两者等价。
 - `changeclidescription` 是 `change_cli_description` 的兼容别名，两者等价。
 
-`<a id="tips-cn"></a>`
+<a id="tips-cn"></a>
 
 # 💡 使用建议
 

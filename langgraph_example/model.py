@@ -39,8 +39,8 @@ load_dotenv()
 
 _SETUP_HINT = """\
 Please follow the README.md setup steps to create skills collections first:
-  magicskills createskills langgraph_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
-  magicskills createskills langgraph_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
+  magicskills addskills langgraph_agent1_skills --skill-list c_2_ast pdf --agent-md-path ./AGENTS.md
+  magicskills addskills langgraph_agent2_skills --skill-list c_2_ast docx --agent-md-path ./AGENTS.md
 """
 
 

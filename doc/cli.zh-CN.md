@@ -22,11 +22,11 @@ magicskills <command> -h
 | `execskill`             | 在当前工作目录执行命令                       | 支持流式输出、JSON 输出、无 shell 模式、自定义 skills 路径 |
 | `syncskills`            | 把命名 skills 集合同步进 `AGENTS.md`       | 生成或替换 `<skills_system>` 区块                        |
 | `install`               | 从本地目录、Git 仓库或默认技能仓库安装 skill | 复制 skill 文件并注册到 `Allskills`                      |
-| `createskill`           | 把一个现成的 skill 目录注册到 `Allskills`  | 不复制文件，只注册元数据                                   |
+| `addskill`             | 把一个现成的 skill 注册到某个集合中      | 不复制文件，只注册元数据                                   |
 | `uploadskill`           | 把本地 skill 提交到默认 MagicSkills 仓库     | 自动走 fork、push、PR 流程                                 |
-| `deleteskill`           | 删除一个 skill                               | 删除 skill 目录，并从其他集合中剔除同路径 skill            |
+| `deleteskill`           | 从某个集合中删除一个 skill，或全局删除       | 从命名集合中移除，或从 `Allskills` 删除目录并清理引用      |
 | `showskill`             | 审查一个 skill 的完整内容                    | 显示元信息和 skill 目录下所有文件内容                      |
-| `createskills`          | 创建一个命名 skills 集合                     | 为 agent 或团队建立独立 skill 集合                         |
+| `addskills`            | 创建一个命名 skills 集合                     | 为 agent 或团队建立独立 skill 集合                         |
 | `listskills`            | 查看所有命名 skills 集合                     | 普通文本或 JSON 输出                                       |
 | `deleteskills`          | 删除一个命名 skills 集合                     | 只删除集合注册，不删除 skill 文件                          |
 | `changetooldescription` | 修改集合的 `tool_description` 元数据       | 更新面向 tool 的描述，便于后续查询与外部集成               |
@@ -35,8 +35,8 @@ magicskills <command> -h
 
 ## 📌 通用约定
 
-- `Allskills` 是内置 skills 集合。`listskill`、`readskill`、`install`、`createskill`、`uploadskill`、`deleteskill`、`showskill` 默认都围绕它工作。
-- 命名 skills 集合通过 `createskills` 创建，集合元数据保存在 `~/.magicskills/collections.json`。
+- `Allskills` 是内置 skills 集合。`listskill`、`readskill`、`install`、`addskill`、`uploadskill`、`deleteskill`、`showskill` 默认都围绕它工作。
+- 命名 skills 集合通过 `addskills` 创建，集合元数据保存在 `~/.magicskills/collections.json`。
 - 很多命令同时接受 `skill 名称` 和 `skill 目录路径`。如果同名 skill 有多个，必须传显式路径。
 - `install` 的默认安装目录由作用域决定。
 - 当前项目默认目录：`./.claude/skills`
@@ -315,40 +315,48 @@ magicskills install demo --target ./custom-skills -y
 - 安装完成后，CLI 会输出每个实际落盘的目录路径。
 - 安装流程会把已安装的 skill 注册进当前进程中的 `Allskills` 集合。
 
-## 🧰 `createskill`
+## 🧰 `addskill`
 
 **使用场景**
 
-你已经手写好了一个 skill 目录，只想把它注册进 `Allskills`，而不是重新复制一份。
+你已经有一个现成的 skill，只想把它注册进某个集合，而不是重新复制一份。
 
 **命令格式**
 
 ```bash
-magicskills createskill <path> [--source SOURCE]
+magicskills addskill <target> [--source SOURCE] [--name COLLECTION]
 ```
 
 **参数说明**
 
-- `<path>`：skill 目录路径，目录内必须包含 `SKILL.md`。
+- `<target>`：可以是 skill 目录路径，也可以是内置 `Allskills` 中已可解析的 skill 名称。
 - `--source`：可选，给这个 skill 记录来源信息；不传时默认记录 skill 所在父目录的绝对路径。
+- `--name`：可选，目标 skills 集合名称；不传时默认注册到内置 `Allskills`。
 
 **功能示例**
 
 注册一个本地 skill 目录：
 
 ```bash
-magicskills createskill ./skills/my-skill
+magicskills addskill ./skills/my-skill
 ```
 
 显式记录来源仓库或来源目录：
 
 ```bash
-magicskills createskill ./skills/my-skill --source https://github.com/owner/repo.git
+magicskills addskill ./skills/my-skill --source https://github.com/owner/repo.git
+```
+
+按名称把一个已有 skill 加入某个命名 skills 集合：
+
+```bash
+magicskills addskill demo --name reviewer
 ```
 
 补充说明：
 
 - 这个命令的行为是“注册已有 skill”，不是“生成 skill 模板”。
+- 当 `--name` 指向命名集合时，这个 skill 也会同步进入内置 `Allskills`。
 - `description` 会从 `SKILL.md` frontmatter 中提取。
 
 ## 📤 `uploadskill`
@@ -401,17 +409,18 @@ magicskills uploadskill ./skills/demo
 
 **使用场景**
 
-你想彻底删除一个 skill，而不只是把它从某个列表里隐藏。
+你想把一个 skill 从某个集合里移除，或者从内置 `Allskills` 里彻底删除。
 
 **命令格式**
 
 ```bash
-magicskills deleteskill <target>
+magicskills deleteskill <target> [--name COLLECTION]
 ```
 
 **参数说明**
 
 - `<target>`：可以是 skill 名称，也可以是 skill 目录路径。
+- `--name`：可选，目标 skills 集合名称；不传时默认作用于内置 `Allskills`。
 
 **功能示例**
 
@@ -419,6 +428,12 @@ magicskills deleteskill <target>
 
 ```bash
 magicskills deleteskill demo
+```
+
+只从某个命名 skills 集合中移除：
+
+```bash
+magicskills deleteskill demo --name reviewer
 ```
 
 同名 skill 冲突时按路径删除：
@@ -430,8 +445,9 @@ magicskills deleteskill ./skills/demo
 补充说明：
 
 - 这个 CLI 命令默认作用于内置的 `Allskills`。
-- 删除时会直接移除实际 skill 目录，不会二次确认。
-- 删除成功后，如果其他命名集合里也引用了同一路径的 skill，这些集合中的对应项也会一起被剔除。
+- 当作用于 `Allskills` 时，删除会直接移除实际 skill 目录，不会二次确认。
+- 当 `--name` 指向命名集合时，只会把 skill 从该集合中移除；skill 目录和 `Allskills` 中的记录都会保留。
+- 如果是从 `Allskills` 删除成功，而其他命名集合里也引用了同一路径的 skill，这些集合中的对应项也会一起被剔除。
 
 ## 🔍 `showskill`
 
@@ -469,7 +485,7 @@ magicskills showskill ./skills/demo
 - 然后会展示 skill 目录下的所有文件内容。
 - 如果遇到二进制文件，会显示 `[binary file omitted: <size> bytes]`，不会直接打印乱码。
 
-## 🧩 `createskills`
+## 🧩 `addskills`
 
 **使用场景**
 
@@ -478,7 +494,7 @@ magicskills showskill ./skills/demo
 **命令格式**
 
 ```bash
-magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]] [--tool-description TEXT] [--cli-description TEXT] [--agent-md-path PATH]
+magicskills addskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]] [--tool-description TEXT] [--cli-description TEXT] [--agent-md-path PATH]
 ```
 
 **参数说明**
@@ -497,43 +513,43 @@ magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]
 创建一个空集合：
 
 ```bash
-magicskills createskills coder
+magicskills addskills coder
 ```
 
 按显式 skill 列表创建：
 
 ```bash
-magicskills createskills reviewer --skill-list demo code-review
+magicskills addskills reviewer --skill-list demo code-review
 ```
 
 按显式 skill 路径创建：
 
 ```bash
-magicskills createskills reviewer --skill-list ./.claude/skills/code-review
+magicskills addskills reviewer --skill-list ./.claude/skills/code-review
 ```
 
 从一个 skills 根目录构造集合：
 
 ```bash
-magicskills createskills coder --paths ./.claude/skills
+magicskills addskills coder --paths ./.claude/skills
 ```
 
 只纳入一个具体 skill：
 
 ```bash
-magicskills createskills reviewer --paths ./.claude/skills/code-review
+magicskills addskills reviewer --paths ./.claude/skills/code-review
 ```
 
 同时指定多个路径：
 
 ```bash
-magicskills createskills fullstack --paths ./.claude/skills ./vendor-skills
+magicskills addskills fullstack --paths ./.claude/skills ./vendor-skills
 ```
 
 创建集合时顺带设置元数据：
 
 ```bash
-magicskills createskills coder \
+magicskills addskills coder \
   --paths ./.claude/skills \
   --tool-description "Unified skill tool for coding tasks" \
   --cli-description "Use magicskills CLI commands only" \

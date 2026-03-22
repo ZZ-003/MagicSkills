@@ -1,4 +1,4 @@
-"""Command implementation for creating named skills collections."""
+"""Command implementation for adding named skills collections."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from ..type.skills import Skills
 
 
-def createskills(
+def addskills(
     name: str,
     skill_list: list[Skill] | str | None = None,
     paths: list[str] | None = None,
@@ -21,7 +21,7 @@ def createskills(
     agent_md_path: str | None = None,
 ) -> Skills:
     """Create and register one named Skills collection."""
-    return REGISTRY.createskills(
+    return REGISTRY.addskills(
         name=name,
         skill_list=skill_list,
         paths=paths,

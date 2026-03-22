@@ -117,7 +117,7 @@ class SkillsRegistry:
                 cli_description = spec.get("cli_description")
                 agent_md_path = spec.get("agent_md_path")
                 paths = path_values if isinstance(path_values, list) else None
-                self.createskills(
+                self.addskills(
                     name=name,
                     paths=paths,
                     tool_description=tool_description if isinstance(tool_description, str) else None,
@@ -140,7 +140,7 @@ class SkillsRegistry:
         )
         return self._store_path
 
-    def createskills(
+    def addskills(
         self,
         name: str,
         skill_list: Iterable[Skill] | str | None = None,

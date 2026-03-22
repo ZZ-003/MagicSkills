@@ -22,8 +22,8 @@ from magicskills import (
 
 - types: `Skill`, `Skills`
 - accessors and constants: `REGISTRY`, `ALL_SKILLS()`, `DEFAULT_SKILLS_ROOT`
-- single-skill and execution functions: `listskill`, `readskill`, `showskill`, `execskill`, `createskill`, `createskill_template`, `install`, `uploadskill`, `deleteskill`
-- skills collection and registry functions: `createskills`, `listskills`, `deleteskills`, `syncskills`, `loadskills`, `saveskills`
+- single-skill and execution functions: `listskill`, `readskill`, `showskill`, `execskill`, `addskill`, `createskill_template`, `install`, `uploadskill`, `deleteskill`
+- skills collection and registry functions: `addskills`, `listskills`, `deleteskills`, `syncskills`, `loadskills`, `saveskills`
 - description and dispatch functions: `change_tool_description`, `changetooldescription`, `change_cli_description`, `changeclidescription`, `skill_tool`
 
 **Usage advice**
@@ -124,7 +124,7 @@ Skills(
 **Common instance methods**
 
 - `get_skill(target)`: retrieve one `Skill` by name or directory path
-- `createskill(skill_path, source=None)`
+- `addskill(target, source=None)`
 - `deleteskill(target)`
 - `listskill()`
 - `readskill(target)`
@@ -185,7 +185,7 @@ Create and persist a collection through the global registry:
 ```python
 from magicskills import REGISTRY
 
-REGISTRY.createskills(name="coder")
+REGISTRY.addskills(name="coder")
 coder = REGISTRY.get_skills("coder")
 print(coder.agent_md_path)
 
@@ -440,7 +440,7 @@ This API ensures the following exist:
 - `assets/`
 - a default `SKILL.md`
 
-## 🧰 `createskill()`
+## 🧰 `addskill()`
 
 **Use case**
 
@@ -449,9 +449,9 @@ You already have an existing skill directory and only want to register it into a
 **Signature**
 
 ```python
-createskill(
+addskill(
     skills: Skills,
-    skill_path: Path | str,
+    target: Path | str,
     source: str | Path | None = None,
 ) -> Path
 ```
@@ -459,7 +459,7 @@ createskill(
 **Parameters**
 
 - `skills`: the target `Skills` collection
-- `skill_path`: the skill directory path, which must contain `SKILL.md`
+- `target`: either a skill directory path, or a skill name already discoverable from built-in `Allskills`
 - `source`: optional source information; if omitted, the absolute path of the parent directory is recorded by default
 
 **Return value**
@@ -471,28 +471,25 @@ createskill(
 Register into the built-in `Allskills` view:
 
 ```python
-from magicskills import ALL_SKILLS, createskill
+from magicskills import ALL_SKILLS, addskill
 
-path = createskill(ALL_SKILLS(), "./skills/demo")
+path = addskill(ALL_SKILLS(), "./skills/demo")
 print(path)
 ```
 
-Explicitly record the source:
+Add one existing skill by name into another collection:
 
 ```python
-from magicskills import ALL_SKILLS, createskill
+from magicskills import ALL_SKILLS, REGISTRY, addskill
 
-path = createskill(
-    ALL_SKILLS(),
-    "./skills/demo",
-    source="https://github.com/example/repo.git",
-)
+reviewer = REGISTRY.get_skills("reviewer")
+path = addskill(reviewer, "demo")
 print(path)
 ```
 
 Notes:
 
-- This API registers an existing directory and does not copy files.
+- This API registers one existing skill and does not copy files.
 - If you register a skill into a non-`Allskills` collection, the same skill is also added to the built-in `Allskills` view.
 - If the target collection belongs to the current `REGISTRY`, the registry is saved automatically.
 
@@ -658,7 +655,7 @@ Notes:
 - When you pass a non-`Allskills` collection, the skill is only removed from that collection and not deleted from disk.
 - When you pass the built-in `Allskills` view, the actual skill directory is deleted, and matching path references are removed from other named collections as well.
 
-## 🧩 `createskills()`
+## 🧩 `addskills()`
 
 **Use case**
 
@@ -667,7 +664,7 @@ You want to create a named `Skills` collection and register it into the global `
 **Signature**
 
 ```python
-createskills(
+addskills(
     name: str,
     skill_list: list[Skill] | str | None = None,
     paths: list[str] | None = None,
@@ -695,19 +692,19 @@ createskills(
 Create an empty collection:
 
 ```python
-from magicskills import createskills
+from magicskills import addskills
 
-skills = createskills("coder")
+skills = addskills("coder")
 print(skills.name, len(skills.skills))
 ```
 
 Create by paths:
 
 ```python
-from magicskills import createskills
+from magicskills import addskills
 
-# Prerequisite: these skills have already entered the built-in Allskills view via install/createskill
-skills = createskills(
+# Prerequisite: these skills have already entered the built-in Allskills view via install/addskill
+skills = addskills(
     "coder",
     paths=["./.claude/skills"],
     tool_description="Unified skill tool for coding tasks",
@@ -720,10 +717,10 @@ print(skills.agent_md_path)
 Create from a single skill name:
 
 ```python
-from magicskills import createskills
+from magicskills import addskills
 
 # Prerequisite: the built-in Allskills view can already resolve a skill named demo
-skills = createskills("reviewer", skill_list="demo")
+skills = addskills("reviewer", skill_list="demo")
 print([item.name for item in skills.skills])
 ```
 

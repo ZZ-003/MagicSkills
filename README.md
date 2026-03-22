@@ -153,7 +153,7 @@ If the archive contains only one skill directory, you can also install that extr
 ### 3. 🧩 Create One Agent Collection
 
 ```bash
-magicskills createskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
+magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
 ```
 
 This means:
@@ -304,7 +304,7 @@ Common capabilities around a single skill include:
 - `readskill`: read a skill's `SKILL.md`
 - `showskill`: inspect the full contents of a skill directory
 - `createskill_template`: create a standard skill skeleton
-- `createskill`: register an existing skill directory into a collection
+- `addskill`: register an existing skill into a collection
 
 ## 🧩 Skills Collection Layer
 
@@ -363,7 +363,7 @@ In other words, the Registry stores "collection configuration" and "skill path r
 
 The typical workflow for this layer is:
 
-1. Create a named collection with `createskills`
+1. Create a named collection with `addskills`
 2. Persist it with `saveskills` or `REGISTRY.saveskills()`
 3. Restore those collections with `loadskills`, or through default loading on process startup
 4. Sync a specific collection to the target `AGENTS.md` with `syncskills`
@@ -383,11 +383,11 @@ Chinese version: [doc/cli.zh-CN.md](./doc/cli.zh-CN.md).
 | `execskill`               | Run commands in the current working directory          | Supports streaming, JSON output, no-shell mode, custom paths    |
 | `syncskills`              | Sync a named skills collection into `AGENTS.md`        | Generate or replace the `<skills_system>` block                 |
 | `install`                 | Install skills from local paths, Git repos, or default | Copy skill files and register them into `Allskills`             |
-| `createskill`             | Register an existing skill directory into `Allskills`  | Register metadata without copying files                         |
+| `addskill`                | Register one existing skill into one collection         | Register metadata without copying files                         |
 | `uploadskill`             | Submit a local skill to the default MagicSkills repo   | Automate fork, push, and PR flow                                |
-| `deleteskill`             | Delete one skill                                       | Delete the skill directory and remove shared references         |
+| `deleteskill`             | Delete one skill from one collection or globally       | Remove from one named collection, or delete the skill directory from `Allskills` |
 | `showskill`               | Review the full contents of a skill package            | Show metadata and all files inside the skill directory          |
-| `createskills`            | Create a named skills collection                       | Build an isolated skill set for an agent or team               |
+| `addskills`               | Create a named skills collection                       | Build an isolated skill set for an agent or team               |
 | `listskills`              | List all named skills collections                      | Human-readable output or JSON output                            |
 | `deleteskills`            | Delete one or more named skills collections            | Delete only collection registrations, not the skill files       |
 | `changetooldescription`   | Modify the collection's `tool_description` metadata    | Update tool-oriented description for later querying and integration |
@@ -420,8 +420,8 @@ from magicskills import (
 
 - types: `Skill`, `Skills`
 - accessors and constants: `REGISTRY`, `ALL_SKILLS()`, `DEFAULT_SKILLS_ROOT`
-- single-skill and execution functions: `listskill`, `readskill`, `showskill`, `execskill`, `createskill`, `createskill_template`, `install`, `uploadskill`, `deleteskill`
-- skills collection and registry functions: `createskills`, `listskills`, `deleteskills`, `syncskills`, `loadskills`, `saveskills`
+- single-skill and execution functions: `listskill`, `readskill`, `showskill`, `execskill`, `addskill`, `createskill_template`, `install`, `uploadskill`, `deleteskill`
+- skills collection and registry functions: `addskills`, `listskills`, `deleteskills`, `syncskills`, `loadskills`, `saveskills`
 - description and dispatch functions: `change_tool_description`, `changetooldescription`, `change_cli_description`, `changeclidescription`, `skill_tool`
 
 **Usage advice**
@@ -447,7 +447,7 @@ This has several benefits:
 The recommended flow is:
 
 1. Install skills into a shared directory, such as `~/allskills/`, `./.claude/skills`, or `~/.claude/skills`
-2. Use `createskills` to create a named collection that contains only a subset of skills
+2. Use `addskills` to create a named collection that contains only a subset of skills
 3. Use `syncskills` to write that collection into the target `AGENTS.md`
 4. Choose the sync mode based on the target runtime:
    `none` for agents that can directly use the skill information list in `AGENTS.md`, `cli_description` for agents that need CLI guidance through `magicskills skill-tool` instead
@@ -457,7 +457,7 @@ Example:
 
 ```bash
 magicskills install anthropics/skills -t ~/allskills/
-magicskills createskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
+magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
 magicskills syncskills agent1_skills
 ```
 
@@ -519,7 +519,7 @@ This approach fits two kinds of scenarios:
 
 The simplified rule of thumb is:
 
-- for agents that read `AGENTS.md`, prefer `createskills + syncskills`
+- for agents that read `AGENTS.md`, prefer `addskills + syncskills`
 - for agents that do not read `AGENTS.md`, prefer `skill-tool` or `skills.skill_tool()`
 
 ## 🌱 Sharing and Growing the Skill Ecosystem
@@ -557,7 +557,7 @@ Folders such as `references/`, `scripts/`, and `assets/` are common conventions,
 
 Choose based on how your agent integrates:
 
-- if your agent reads `AGENTS.md`, prefer `createskills + syncskills`
+- if your agent reads `AGENTS.md`, prefer `addskills + syncskills`
 - if your agent does not read `AGENTS.md` and instead integrates through tool-call / function-call, prefer `skill-tool` or `skills.skill_tool()`
 
 The former is better for document-driven integration; the latter is better for direct programmatic integration.

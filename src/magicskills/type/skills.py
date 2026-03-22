@@ -134,11 +134,11 @@ class Skills:
             raise KeyError(f"Multiple skills named '{name}' found. Provide path. Candidates: {options}")
         return matches[0]
 
-    def createskill(self, skill_path: Path | str, source: str | Path | None = None) -> Path:
-        """Create one skill scaffold and register it into this collection."""
-        from ..command.createskill import createskill as command_createskill
+    def addskill(self, target: Path | str, source: str | Path | None = None) -> Path:
+        """Register one skill by target(name or path) into this collection."""
+        from ..command.addskill import addskill as command_addskill
 
-        return command_createskill(self, skill_path=skill_path, source=source)
+        return command_addskill(self, target=target, source=source)
 
     def deleteskill(self, target: str | Path) -> str:
         """Delete one skill by target(name or path) from this collection."""

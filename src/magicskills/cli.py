@@ -17,9 +17,10 @@ import textwrap
 from pathlib import Path
 from typing import Iterable
 
+from .command.addskill import addskill as command_addskill
+from .command.addskills import addskills as command_addskills
 from .command.install import install
 from .command.change_cli_description import change_cli_description as command_change_cli_description
-from .command.createskill import createskill as command_createskill
 from .command.createskill_template import createskill_template as command_createskill_template
 from .command.change_tool_description import change_tool_description as command_change_tool_description
 from .command.execskill import execskill as command_execskill
@@ -29,7 +30,6 @@ from .command.skill_tool import skill_tool as command_skill_tool
 from .command.syncskills import syncskills as command_syncskills
 from .command.uploadskill import uploadskill as command_uploadskill
 from .command.showskill import showskill as command_showskill
-from .command.createskills import createskills as command_createskills
 from .command.listskills import listskills as command_listskills
 from .command.loadskills import loadskills as command_loadskills
 from .command.deleteskills import deleteskills as command_deleteskills
@@ -323,9 +323,9 @@ def _skill_list_from_args(values: Iterable[str] | None):
             message = str(exc)
             if "Multiple skills named" in message:
                 raise SystemExit(
-                    f"createskills: skill target '{value}' is duplicated; pass skill directory path.\n{message}"
+                    f"addskills: skill target '{value}' is duplicated; pass skill directory path.\n{message}"
                 ) from exc
-            raise SystemExit(f"createskills: skill target not found: {value}") from exc
+            raise SystemExit(f"addskills: skill target not found: {value}") from exc
 
         resolved_path = skill.path.expanduser().resolve()
         if resolved_path in seen_paths:
@@ -403,10 +403,10 @@ def cmd_install(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_create_skill(args: argparse.Namespace) -> int:
-    """Register one existing skill directory into Allskills."""
-    skill_path = Path(args.path).expanduser()
-    path = command_createskill(ALL_SKILLS(), skill_path=skill_path, source=args.source)
+def cmd_add_skill(args: argparse.Namespace) -> int:
+    """Register one skill by target(name or path) into one collection."""
+    skills = _registered_skills_or_exit(args.name) if args.name else ALL_SKILLS()
+    path = command_addskill(skills, target=args.target, source=args.source)
     print(f"Registered: {path}")
     return 0
 
@@ -416,6 +416,14 @@ def cmd_create_skill_template(args: argparse.Namespace) -> int:
     path = command_createskill_template(args.name, args.base_dir)
     print(f"Created template: {path}")
     return 0
+
+
+def _configure_add_skill_parser(parser: argparse.ArgumentParser) -> None:
+    """Configure args for `addskill`."""
+    parser.add_argument("target", help="Skill directory path or skill name from Allskills")
+    parser.add_argument("--source", help="Install/discovery source to store in Skill metadata")
+    parser.add_argument("--name", help="Target named skills collection (default: Allskills)")
+    parser.set_defaults(func=cmd_add_skill)
 
 
 def cmd_upload_skill(args: argparse.Namespace) -> int:
@@ -451,8 +459,9 @@ def cmd_upload_skill(args: argparse.Namespace) -> int:
 
 def cmd_delete_skill(args: argparse.Namespace) -> int:
     """Delete skill by one unified target argument: name or path."""
+    skills = _registered_skills_or_exit(args.name) if args.name else ALL_SKILLS()
     try:
-        path = command_deleteskill(ALL_SKILLS(), str(args.target))
+        path = command_deleteskill(skills, str(args.target))
     except (KeyError, ValueError, FileNotFoundError) as exc:
         raise SystemExit(str(exc)) from exc
 
@@ -472,7 +481,7 @@ def cmd_show_skill(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_create_skills(args: argparse.Namespace) -> int:
+def cmd_add_skills(args: argparse.Namespace) -> int:
     """Create one named skills collection instance."""
     paths = _paths_from_args(args.paths)
     skill_list = _skill_list_from_args(args.skill_list)
@@ -480,7 +489,7 @@ def cmd_create_skills(args: argparse.Namespace) -> int:
         raise SystemExit("--paths cannot be used with --skill-list")
     path_values = [str(path) for path in paths] if paths else None
     try:
-        instance = command_createskills(
+        instance = command_addskills(
             name=args.name,
             skill_list=skill_list,
             paths=path_values,
@@ -600,10 +609,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_install.add_argument("-y", "--yes", action="store_true", help="Overwrite without prompt")
     p_install.set_defaults(func=cmd_install)
 
-    p_create = sub.add_parser("createskill", help="Register one existing skill directory")
-    p_create.add_argument("path", help="Skill directory path (must contain SKILL.md)")
-    p_create.add_argument("--source", help="Install/discovery source to store in Skill metadata")
-    p_create.set_defaults(func=cmd_create_skill)
+    p_add = sub.add_parser("addskill", help="Register one skill into one collection")
+    _configure_add_skill_parser(p_add)
 
     p_create_template = sub.add_parser("createskill_template", help="Create a standard skill scaffold")
     p_create_template.add_argument("name", help="Skill name")
@@ -616,24 +623,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_delete = sub.add_parser("deleteskill", help="Delete a skill by one target (name or path)")
     p_delete.add_argument("target", help="Skill name or skill directory path")
+    p_delete.add_argument("--name", help="Target named skills collection (default: Allskills)")
     p_delete.set_defaults(func=cmd_delete_skill)
 
     p_show = sub.add_parser("showskill", help="Show all content for one skill from Allskills")
     p_show.add_argument("target", help="Skill name or skill directory path")
     p_show.set_defaults(func=cmd_show_skill)
 
-    p_create_skills = sub.add_parser("createskills", help="Create a named skills collection")
-    p_create_skills.add_argument("name", help="Skills instance name")
-    p_create_skills.add_argument(
+    p_add_skills = sub.add_parser("addskills", help="Create a named skills collection")
+    p_add_skills.add_argument("name", help="Skills instance name")
+    p_add_skills.add_argument(
         "--skill-list",
         nargs="*",
         help="Specific skills (name or skill directory path) for this collection",
     )
-    p_create_skills.add_argument("--paths", nargs="*", help="Custom paths for this collection")
-    p_create_skills.add_argument("--tool-description", help="Tool description override")
-    p_create_skills.add_argument("--cli-description", help="CLI description override")
-    p_create_skills.add_argument("--agent-md-path", help="AGENTS.md path override")
-    p_create_skills.set_defaults(func=cmd_create_skills)
+    p_add_skills.add_argument("--paths", nargs="*", help="Custom paths for this collection")
+    p_add_skills.add_argument("--tool-description", help="Tool description override")
+    p_add_skills.add_argument("--cli-description", help="CLI description override")
+    p_add_skills.add_argument("--agent-md-path", help="AGENTS.md path override")
+    p_add_skills.set_defaults(func=cmd_add_skills)
 
     p_list_skills = sub.add_parser("listskills", help="List named skills collections")
     p_list_skills.add_argument("--json", action="store_true", help="JSON output")

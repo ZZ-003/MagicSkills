@@ -153,7 +153,7 @@ magicskills install ./tmp/vendor-skills
 ### 3. 🧩 创建一个 Agent 集合
 
 ```bash
-magicskills createskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
+magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
 ```
 
 这表示：
@@ -304,7 +304,7 @@ demo-skill/
 - `readskill`：读取某个 skill 的 `SKILL.md`
 - `showskill`：查看 skill 目录的完整内容
 - `createskill_template`：创建标准 skill 骨架
-- `createskill`：把一个已有的 skill 目录注册到某个集合中
+- `addskill`：把一个已有的 skill 注册到某个集合中
 
 ## 🧩 Skills 集合层
 
@@ -363,7 +363,7 @@ demo-skill/
 
 这一层的典型工作流是：
 
-1. 使用 `createskills` 创建一个命名集合
+1. 使用 `addskills` 创建一个命名集合
 2. 用 `saveskills` 或 `REGISTRY.saveskills()` 持久化它
 3. 通过 `loadskills`，或在进程启动时的默认加载逻辑中恢复这些集合
 4. 使用 `syncskills` 把某个具体集合写入目标 `AGENTS.md`
@@ -383,11 +383,11 @@ demo-skill/
 | `execskill` | 在当前工作目录执行命令 | 支持流式输出、JSON 输出、no-shell 模式和自定义路径 |
 | `syncskills` | 将一个命名的 skills 集合同步到 `AGENTS.md` | 生成或替换 `<skills_system>` 区块 |
 | `install` | 从本地路径、Git 仓库或默认来源安装 skill | 复制 skill 文件并将其注册到 `Allskills` |
-| `createskill` | 将现有 skill 目录注册到 `Allskills` | 只注册元数据，不复制文件 |
+| `addskill` | 将现有 skill 注册到某个集合中 | 只注册元数据，不复制文件 |
 | `uploadskill` | 将本地 skill 提交到默认 MagicSkills 仓库 | 自动化执行 fork、push 和 PR 流程 |
-| `deleteskill` | 删除一个 skill | 删除 skill 目录并清理共享引用 |
+| `deleteskill` | 从某个集合中删除一个 skill，或全局删除 | 从命名集合中移除，或从 `Allskills` 删除目录并清理引用 |
 | `showskill` | 查看某个 skill 包的完整内容 | 展示元数据以及 skill 目录中的全部文件 |
-| `createskills` | 创建一个命名的 skills 集合 | 为某个 agent 或团队构建隔离的 skill 集 |
+| `addskills` | 创建一个命名的 skills 集合 | 为某个 agent 或团队构建隔离的 skill 集 |
 | `listskills` | 列出所有命名的 skills 集合 | 输出人类可读格式或 JSON 格式 |
 | `deleteskills` | 删除一个或多个命名的 skills 集合 | 只删除集合注册信息，不删除 skill 文件 |
 | `changetooldescription` | 修改集合的 `tool_description` 元数据 | 更新面向 tool 的描述，供后续查询和集成使用 |
@@ -419,8 +419,8 @@ from magicskills import (
 
 - 类型：`Skill`、`Skills`
 - 访问器和常量：`REGISTRY`、`ALL_SKILLS()`、`DEFAULT_SKILLS_ROOT`
-- 单个 skill 与执行相关函数：`listskill`、`readskill`、`showskill`、`execskill`、`createskill`、`createskill_template`、`install`、`uploadskill`、`deleteskill`
-- skills 集合与注册表相关函数：`createskills`、`listskills`、`deleteskills`、`syncskills`、`loadskills`、`saveskills`
+- 单个 skill 与执行相关函数：`listskill`、`readskill`、`showskill`、`execskill`、`addskill`、`createskill_template`、`install`、`uploadskill`、`deleteskill`
+- skills 集合与注册表相关函数：`addskills`、`listskills`、`deleteskills`、`syncskills`、`loadskills`、`saveskills`
 - 描述与分发函数：`change_tool_description`、`changetooldescription`、`change_cli_description`、`changeclidescription`、`skill_tool`
 
 **使用建议**
@@ -446,7 +446,7 @@ from magicskills import (
 推荐流程如下：
 
 1. 把 skill 安装到一个共享目录，例如 `~/allskills/`、`./.claude/skills` 或 `~/.claude/skills`
-2. 使用 `createskills` 创建一个只包含部分 skill 的命名集合
+2. 使用 `addskills` 创建一个只包含部分 skill 的命名集合
 3. 使用 `syncskills` 把该集合写入目标 `AGENTS.md`
 4. 根据目标运行时选择同步模式：
    `none` 适合能够根据 `AGENTS.md` 中给出的 skill 信息列表直接使用 skill 的 agent，`cli_description` 适合不能直接使用该列表、需要通过 `magicskills skill-tool` 的 CLI 说明来使用 skill 的 agent
@@ -456,7 +456,7 @@ from magicskills import (
 
 ```bash
 magicskills install anthropics/skills -t ~/allskills/
-magicskills createskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
+magicskills addskills agent1_skills --skill-list pdf docx --agent-md-path /agent_workdir/AGENTS.md
 magicskills syncskills agent1_skills
 ```
 
@@ -518,7 +518,7 @@ def _skill_tool(action: str, arg: str = "") -> str:
 
 简单判断就是：
 
-- 会读取 `AGENTS.md` 的 agent，优先使用 `createskills + syncskills`
+- 会读取 `AGENTS.md` 的 agent，优先使用 `addskills + syncskills`
 - 不读取 `AGENTS.md` 的 agent，优先使用 `skill-tool` 或 `skills.skill_tool()`
 
 ## 🌱 共享与发展 skill 生态
@@ -556,7 +556,7 @@ magicskills install my-skill
 
 根据 agent 的集成方式来选：
 
-- 如果你的 agent 会读取 `AGENTS.md`，优先使用 `createskills + syncskills`
+- 如果你的 agent 会读取 `AGENTS.md`，优先使用 `addskills + syncskills`
 - 如果你的 agent 不读取 `AGENTS.md`，而是通过 tool-call / function-call 集成，优先使用 `skill-tool` 或 `skills.skill_tool()`
 
 前者更适合文档驱动的接入方式；后者更适合程序化直接集成。

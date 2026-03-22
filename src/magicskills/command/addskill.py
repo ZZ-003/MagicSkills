@@ -1,4 +1,4 @@
-"""Command implementation for creating skills."""
+"""Command implementation for adding one skill into one collection."""
 
 from __future__ import annotations
 
@@ -18,13 +18,51 @@ if TYPE_CHECKING:
     from ..type.skills import Skills
 
 
-def createskill(
+def _looks_like_path_target(value: str | Path) -> bool:
+    """Return True when target should be treated as filesystem path."""
+    if isinstance(value, Path):
+        return True
+    raw = str(value).strip()
+    if not raw:
+        return False
+    if "/" in raw or "\\" in raw or raw.startswith(".") or raw.startswith("~"):
+        return True
+    return Path(raw).expanduser().exists()
+
+
+def addskill(
     skills: Skills,
-    skill_path: Path | str,
+    target: Path | str,
     source: str | Path | None = None,
 ) -> Path:
-    """Register one existing skill directory into this collection."""
-    skill_dir = Path(skill_path).expanduser().resolve()
+    """Register one skill by target(name or path) into this collection."""
+    raw_target = str(target).strip()
+    if not raw_target:
+        raise ValueError("addskill requires target: <name-or-path>")
+
+    created_source = str(source).strip() if source is not None else ""
+
+    if _looks_like_path_target(target):
+        skill_dir = Path(raw_target).expanduser().resolve()
+    else:
+        from ..type.skillsregistry import ALL_SKILLS
+
+        try:
+            resolved_skill = ALL_SKILLS().get_skill(raw_target)
+        except KeyError as exc:
+            message = str(exc)
+            if "Multiple skills named" in message:
+                raise ValueError(
+                    f"addskill: skill name '{raw_target}' is duplicated; "
+                    "pass <skill-directory-path> as target.\n"
+                    f"{message}"
+                ) from exc
+            raise KeyError(f"addskill: skill target not found: {raw_target}") from exc
+
+        skill_dir = resolved_skill.path.expanduser().resolve()
+        if not created_source:
+            created_source = resolved_skill.source
+
     if not skill_dir.exists():
         raise FileNotFoundError(f"Skill directory not found: {skill_dir}")
     if not is_directory_or_symlink_to_directory(skill_dir):
@@ -36,7 +74,6 @@ def createskill(
     content = read_text(skill_md)
     description = extract_yaml_field(content, "description")
     is_global, universal = detect_location(skill_dir.parent)
-    created_source = str(source).strip() if source is not None else ""
     if not created_source:
         created_source = str(skill_dir.parent.expanduser().resolve())
     created_skill = Skill(

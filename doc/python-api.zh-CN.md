@@ -23,8 +23,8 @@ from magicskills import (
 
 - 类型：`Skill`、`Skills`
 - 访问器与常量：`REGISTRY`、`ALL_SKILLS()`、`DEFAULT_SKILLS_ROOT`
-- 单 skill / 执行类函数：`listskill`、`readskill`、`showskill`、`execskill`、`createskill`、`createskill_template`、`install`、`uploadskill`、`deleteskill`
-- skills 集合 / 注册表函数：`createskills`、`listskills`、`deleteskills`、`syncskills`、`loadskills`、`saveskills`
+- 单 skill / 执行类函数：`listskill`、`readskill`、`showskill`、`execskill`、`addskill`、`createskill_template`、`install`、`uploadskill`、`deleteskill`
+- skills 集合 / 注册表函数：`addskills`、`listskills`、`deleteskills`、`syncskills`、`loadskills`、`saveskills`
 - 描述与分发函数：`change_tool_description`、`changetooldescription`、`change_cli_description`、`changeclidescription`、`skill_tool`
 
 **使用建议**
@@ -125,7 +125,7 @@ Skills(
 **常用实例方法**
 
 - `get_skill(target)`：按名称或目录路径拿到单个 `Skill`
-- `createskill(skill_path, source=None)`
+- `addskill(target, source=None)`
 - `deleteskill(target)`
 - `listskill()`
 - `readskill(target)`
@@ -186,7 +186,7 @@ print([item.name for item in REGISTRY.listskills()])
 ```python
 from magicskills import REGISTRY
 
-REGISTRY.createskills(name="coder")
+REGISTRY.addskills(name="coder")
 coder = REGISTRY.get_skills("coder")
 print(coder.agent_md_path)
 
@@ -441,7 +441,7 @@ print(skill_dir)
 - `assets/`
 - 默认 `SKILL.md`
 
-## 🧰 `createskill()`
+## 🧰 `addskill()`
 
 **使用场景**
 
@@ -450,9 +450,9 @@ print(skill_dir)
 **签名**
 
 ```python
-createskill(
+addskill(
     skills: Skills,
-    skill_path: Path | str,
+    target: Path | str,
     source: str | Path | None = None,
 ) -> Path
 ```
@@ -460,7 +460,7 @@ createskill(
 **参数说明**
 
 - `skills`：目标 `Skills` 集合。
-- `skill_path`：skill 目录路径，目录内必须包含 `SKILL.md`。
+- `target`：可以是 skill 目录路径，也可以是内置 `Allskills` 中已可解析的 skill 名称。
 - `source`：可选来源信息；不传时默认记录父目录的绝对路径。
 
 **返回值**
@@ -472,28 +472,25 @@ createskill(
 注册到内置 `Allskills` 视图：
 
 ```python
-from magicskills import ALL_SKILLS, createskill
+from magicskills import ALL_SKILLS, addskill
 
-path = createskill(ALL_SKILLS(), "./skills/demo")
+path = addskill(ALL_SKILLS(), "./skills/demo")
 print(path)
 ```
 
-显式记录来源：
+按名称把一个已有 skill 加入另一个集合：
 
 ```python
-from magicskills import ALL_SKILLS, createskill
+from magicskills import REGISTRY, addskill
 
-path = createskill(
-    ALL_SKILLS(),
-    "./skills/demo",
-    source="https://github.com/example/repo.git",
-)
+reviewer = REGISTRY.get_skills("reviewer")
+path = addskill(reviewer, "demo")
 print(path)
 ```
 
 补充说明：
 
-- 这个 API 注册的是“已有目录”，不会复制文件。
+- 这个 API 注册的是“已有 skill”，不会复制文件。
 - 如果你把 skill 注册到某个非 `Allskills` 集合，同一 skill 也会同步加入内置 `Allskills` 视图。
 - 如果目标集合属于当前 `REGISTRY`，注册表会自动保存。
 
@@ -659,7 +656,7 @@ print(deleted)
 - 传非 `Allskills` 集合时，只从该集合移除，不删磁盘。
 - 传内置 `Allskills` 视图时，会删除实际 skill 目录，并同步从其他命名集合中剔除同路径 skill。
 
-## 🧩 `createskills()`
+## 🧩 `addskills()`
 
 **使用场景**
 
@@ -668,7 +665,7 @@ print(deleted)
 **签名**
 
 ```python
-createskills(
+addskills(
     name: str,
     skill_list: list[Skill] | str | None = None,
     paths: list[str] | None = None,
@@ -696,19 +693,19 @@ createskills(
 创建空集合：
 
 ```python
-from magicskills import createskills
+from magicskills import addskills
 
-skills = createskills("coder")
+skills = addskills("coder")
 print(skills.name, len(skills.skills))
 ```
 
 按路径创建：
 
 ```python
-from magicskills import createskills
+from magicskills import addskills
 
-# 📝 前提：这些 skills 已经通过 install/createskill 进入内置 Allskills 视图
-skills = createskills(
+# 📝 前提：这些 skills 已经通过 install/addskill 进入内置 Allskills 视图
+skills = addskills(
     "coder",
     paths=["./.claude/skills"],
     tool_description="Unified skill tool for coding tasks",
@@ -721,10 +718,10 @@ print(skills.agent_md_path)
 按单个 skill 名称创建：
 
 ```python
-from magicskills import createskills
+from magicskills import addskills
 
 # 📝 前提：内置 Allskills 视图中已经能解析到名为 demo 的 skill
-skills = createskills("reviewer", skill_list="demo")
+skills = addskills("reviewer", skill_list="demo")
 print([item.name for item in skills.skills])
 ```
 

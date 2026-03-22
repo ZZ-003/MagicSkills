@@ -98,13 +98,13 @@ def _install_and_sync(
     source: str | Path | None = None,
 ) -> list[Path]:
     """Copy discovered skills to target root and sync them into Allskills."""
-    from .createskill import createskill as command_createskill
+    from .addskill import addskill as command_addskill
 
     installed = [_copy_skill_dir(skill_dir, target_root, yes) for skill_dir in skill_dirs]
     for skill_dir in installed:
-        command_createskill(
+        command_addskill(
             ALL_SKILLS(),
-            skill_path=skill_dir,
+            target=skill_dir,
             source=source,
         )
     return installed

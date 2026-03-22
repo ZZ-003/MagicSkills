@@ -21,11 +21,11 @@ The examples below assume `bash/zsh`; if you use PowerShell, adjust quoting and 
 | `execskill`               | Run commands in the current working directory          | Supports streaming, JSON output, no-shell mode, custom paths    |
 | `syncskills`              | Sync a named skills collection into `AGENTS.md`        | Generate or replace the `<skills_system>` block                 |
 | `install`                 | Install skills from local paths, Git repos, or default | Copy skill files and register them into `Allskills`             |
-| `createskill`             | Register an existing skill directory into `Allskills`  | Register metadata without copying files                         |
+| `addskill`                | Register one existing skill into one collection         | Register metadata without copying files                         |
 | `uploadskill`             | Submit a local skill to the default MagicSkills repo   | Automate fork, push, and PR flow                                |
-| `deleteskill`             | Delete one skill                                       | Delete the skill directory and remove shared references         |
+| `deleteskill`             | Delete one skill from one collection or globally       | Remove from one named collection, or delete the skill directory from `Allskills` |
 | `showskill`               | Review the full contents of a skill package            | Show metadata and all files inside the skill directory          |
-| `createskills`            | Create a named skills collection                       | Build an isolated skill set for an agent or team               |
+| `addskills`               | Create a named skills collection                       | Build an isolated skill set for an agent or team               |
 | `listskills`              | List all named skills collections                      | Human-readable output or JSON output                            |
 | `deleteskills`            | Delete a named skills collection                       | Delete only the collection registration, not the skill files    |
 | `changetooldescription`   | Modify the collection's `tool_description` metadata    | Update tool-oriented description for later querying and integration |
@@ -34,8 +34,8 @@ The examples below assume `bash/zsh`; if you use PowerShell, adjust quoting and 
 
 ## 📌 General Conventions
 
-- `Allskills` is the built-in skills collection. `listskill`, `readskill`, `install`, `createskill`, `uploadskill`, `deleteskill`, and `showskill` all operate around it by default.
-- Named skills collections are created through `createskills`, and their metadata is stored in `~/.magicskills/collections.json`.
+- `Allskills` is the built-in skills collection. `listskill`, `readskill`, `install`, `addskill`, `uploadskill`, `deleteskill`, and `showskill` all operate around it by default.
+- Named skills collections are created through `addskills`, and their metadata is stored in `~/.magicskills/collections.json`.
 - Many commands accept both a `skill name` and a `skill directory path`. If multiple skills share the same name, you must pass an explicit path.
 - The default install directory for `install` depends on the scope.
 - Current project default: `./.claude/skills`
@@ -314,40 +314,48 @@ Notes:
 - After installation, the CLI prints the actual directories written to disk.
 - The install flow also registers installed skills into the current process `Allskills` collection.
 
-## 🧰 `createskill`
+## 🧰 `addskill`
 
 **Use case**
 
-You already wrote a skill directory by hand and only want to register it into `Allskills`, instead of copying it again.
+You already have one skill and only want to register it into one collection, instead of copying it again.
 
 **Command format**
 
 ```bash
-magicskills createskill <path> [--source SOURCE]
+magicskills addskill <target> [--source SOURCE] [--name COLLECTION]
 ```
 
 **Parameters**
 
-- `<path>`: the skill directory path; the directory must contain `SKILL.md`
+- `<target>`: either a skill directory path or a skill name already discoverable from built-in `Allskills`
 - `--source`: optional source info to record for this skill; when omitted, the absolute path of the skill's parent directory is used
+- `--name`: optional named skills collection; when omitted, the skill is registered into built-in `Allskills`
 
 **Examples**
 
 Register a local skill directory:
 
 ```bash
-magicskills createskill ./skills/my-skill
+magicskills addskill ./skills/my-skill
 ```
 
 Explicitly record the source repository or source directory:
 
 ```bash
-magicskills createskill ./skills/my-skill --source https://github.com/owner/repo.git
+magicskills addskill ./skills/my-skill --source https://github.com/owner/repo.git
+```
+
+Add one existing skill by name into a named skills collection:
+
+```bash
+magicskills addskill demo --name reviewer
 ```
 
 Notes:
 
 - The behavior of this command is "register an existing skill", not "generate a skill template".
+- When `--name` points to a named collection, the skill is also synchronized into built-in `Allskills`.
 - `description` is extracted from the `SKILL.md` frontmatter.
 
 ## 📤 `uploadskill`
@@ -400,17 +408,18 @@ Notes:
 
 **Use case**
 
-You want to delete a skill completely, not just hide it from a list.
+You want to remove a skill from one collection, or delete it completely from built-in `Allskills`.
 
 **Command format**
 
 ```bash
-magicskills deleteskill <target>
+magicskills deleteskill <target> [--name COLLECTION]
 ```
 
 **Parameters**
 
 - `<target>`: may be a skill name or a skill directory path
+- `--name`: optional named skills collection; when omitted, the command operates on built-in `Allskills`
 
 **Examples**
 
@@ -418,6 +427,12 @@ Delete by name:
 
 ```bash
 magicskills deleteskill demo
+```
+
+Remove only from a named skills collection:
+
+```bash
+magicskills deleteskill demo --name reviewer
 ```
 
 When names collide, delete by path:
@@ -428,9 +443,10 @@ magicskills deleteskill ./skills/demo
 
 Notes:
 
-- This CLI command operates on the built-in `Allskills` by default.
-- Deletion removes the actual skill directory immediately and does not ask for confirmation a second time.
-- After a successful deletion, if other named collections also reference the same skill path, the corresponding entries in those collections are also removed.
+- By default, this CLI command operates on built-in `Allskills`.
+- When targeting `Allskills`, deletion removes the actual skill directory immediately and does not ask for confirmation a second time.
+- When `--name` targets a named collection, the skill is removed only from that collection; the skill directory and `Allskills` entry are preserved.
+- After a successful deletion from `Allskills`, if other named collections also reference the same skill path, the corresponding entries in those collections are also removed.
 
 ## 🔍 `showskill`
 
@@ -468,7 +484,7 @@ Notes:
 - Then it shows the contents of all files under the skill directory.
 - When binary files are encountered, it prints `[binary file omitted: <size> bytes]` instead of raw unreadable data.
 
-## 🧩 `createskills`
+## 🧩 `addskills`
 
 **Use case**
 
@@ -477,7 +493,7 @@ You need to create an independent named skills collection for an agent, team, or
 **Command format**
 
 ```bash
-magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]] [--tool-description TEXT] [--cli-description TEXT] [--agent-md-path PATH]
+magicskills addskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]] [--tool-description TEXT] [--cli-description TEXT] [--agent-md-path PATH]
 ```
 
 **Parameters**
@@ -496,43 +512,43 @@ magicskills createskills <name> [--skill-list [SKILLS ...]] [--paths [PATHS ...]
 Create an empty collection:
 
 ```bash
-magicskills createskills coder
+magicskills addskills coder
 ```
 
 Create from an explicit skill list:
 
 ```bash
-magicskills createskills reviewer --skill-list demo code-review
+magicskills addskills reviewer --skill-list demo code-review
 ```
 
 Create from explicit skill paths:
 
 ```bash
-magicskills createskills reviewer --skill-list ./.claude/skills/code-review
+magicskills addskills reviewer --skill-list ./.claude/skills/code-review
 ```
 
 Construct a collection from a skills root:
 
 ```bash
-magicskills createskills coder --paths ./.claude/skills
+magicskills addskills coder --paths ./.claude/skills
 ```
 
 Include only one specific skill:
 
 ```bash
-magicskills createskills reviewer --paths ./.claude/skills/code-review
+magicskills addskills reviewer --paths ./.claude/skills/code-review
 ```
 
 Specify multiple paths at once:
 
 ```bash
-magicskills createskills fullstack --paths ./.claude/skills ./vendor-skills
+magicskills addskills fullstack --paths ./.claude/skills ./vendor-skills
 ```
 
 Set metadata while creating the collection:
 
 ```bash
-magicskills createskills coder \
+magicskills addskills coder \
   --paths ./.claude/skills \
   --tool-description "Unified skill tool for coding tasks" \
   --cli-description "Use magicskills CLI commands only" \

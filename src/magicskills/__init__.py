@@ -6,11 +6,11 @@ import importlib
 import sys
 from pathlib import Path
 
+from .command.addskill import addskill
+from .command.addskills import addskills
 from .command.change_cli_description import change_cli_description
 from .command.change_tool_description import change_tool_description
-from .command.createskill import createskill
 from .command.createskill_template import createskill_template
-from .command.createskills import createskills
 from .command.deleteskill import deleteskill
 from .command.deleteskills import deleteskills
 from .command.execskill import execskill
@@ -36,6 +36,8 @@ changeclidescription = change_cli_description
 changetooldescription = change_tool_description
 
 __all__ = [
+    "addskill",
+    "addskills",
     "Skill",
     "Skills",
     "REGISTRY",
@@ -43,9 +45,7 @@ __all__ = [
     "DEFAULT_SKILLS_ROOT",
     "change_cli_description",
     "change_tool_description",
-    "createskill",
     "createskill_template",
-    "createskills",
     "deleteskill",
     "deleteskills",
     "execskill",

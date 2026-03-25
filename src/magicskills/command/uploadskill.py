@@ -21,6 +21,12 @@ IGNORE_PATTERNS = shutil.ignore_patterns(".git", "__pycache__", "*.pyc")
 DEFAULT_SKILL_REPO = "https://github.com/Narwhal-Lab/MagicSkills.git"
 DEFAULT_REPO_SLUG = "Narwhal-Lab/MagicSkills"
 DEFAULT_SKILL_SUBDIR = "skills"
+TEXT_CAPTURE_KWARGS = {
+    "capture_output": True,
+    "text": True,
+    "encoding": "utf-8",
+    "errors": "replace",
+}
 
 
 def _command_details(stdout: str | None, stderr: str | None) -> str:
@@ -45,8 +51,7 @@ def _resolve_default_branch(repo_slug: str) -> str:
         completed = subprocess.run(
             ["gh", "repo", "view", repo_slug, "--json", "defaultBranchRef", "-q", ".defaultBranchRef.name"],
             check=True,
-            capture_output=True,
-            text=True,
+            **TEXT_CAPTURE_KWARGS,
         )
         branch = completed.stdout.strip()
         return branch or "main"
@@ -60,8 +65,7 @@ def _ensure_gh_auth_status() -> None:
         subprocess.run(
             ["gh", "auth", "status"],
             check=True,
-            capture_output=True,
-            text=True,
+            **TEXT_CAPTURE_KWARGS,
         )
     except FileNotFoundError as exc:
         raise RuntimeError("`gh` CLI not found. Install GitHub CLI and run `gh auth login` first.") from exc
@@ -80,8 +84,7 @@ def _github_user_from_auth() -> tuple[str, str]:
         completed = subprocess.run(
             ["gh", "api", "user"],
             check=True,
-            capture_output=True,
-            text=True,
+            **TEXT_CAPTURE_KWARGS,
         )
         payload = json.loads(completed.stdout or "{}")
     except FileNotFoundError as exc:
@@ -108,8 +111,7 @@ def _ensure_fork_exists(repo_slug: str) -> None:
     """Create fork when missing; tolerate already-existing forks."""
     completed = subprocess.run(
         ["gh", "repo", "fork", repo_slug, "--remote=false"],
-        capture_output=True,
-        text=True,
+        **TEXT_CAPTURE_KWARGS,
     )
     if completed.returncode == 0:
         return
@@ -162,9 +164,11 @@ def uploadskill(skills: Skills | Path | str, target: str | Path | None = None) -
     default_branch = _resolve_default_branch(repo_slug)
     source_subdir = Path(DEFAULT_SKILL_SUBDIR)
     requested_push_branch = _default_push_branch(source_dir.name)
+    pull_request_head = ""
     commit_message = f"Fix: upload skill {source_dir.name}"
     fork_owner_login, commit_author_html_url = _github_user_from_auth()
     commit_author_login = fork_owner_login
+    pull_request_head = f"{fork_owner_login}:{requested_push_branch}"
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -245,12 +249,11 @@ def uploadskill(skills: Skills | Path | str, target: str | Path | None = None) -
                         "--base",
                         default_branch,
                         "--head",
-                        requested_push_branch,
+                        pull_request_head,
                     ],
                     cwd=workdir,
                     check=True,
-                    capture_output=True,
-                    text=True,
+                    **TEXT_CAPTURE_KWARGS,
                 )
             except subprocess.CalledProcessError:
                 completed_pr = subprocess.run(
@@ -263,7 +266,7 @@ def uploadskill(skills: Skills | Path | str, target: str | Path | None = None) -
                         "--base",
                         default_branch,
                         "--head",
-                        requested_push_branch,
+                        pull_request_head,
                         "--title",
                         commit_message,
                         "--body",
@@ -271,8 +274,7 @@ def uploadskill(skills: Skills | Path | str, target: str | Path | None = None) -
                     ],
                     cwd=workdir,
                     check=True,
-                    capture_output=True,
-                    text=True,
+                    **TEXT_CAPTURE_KWARGS,
                 )
 
             output = completed_pr.stdout.strip()

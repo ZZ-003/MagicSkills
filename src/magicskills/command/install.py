@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import uuid
+import tempfile
 from pathlib import Path
 
 from ..type.skillsregistry import ALL_SKILLS
@@ -90,16 +90,6 @@ def _copy_skill_dir(skill_dir: Path, target_root: Path, yes: bool) -> Path:
     shutil.copytree(skill_dir, target_path, ignore=IGNORE_PATTERNS)
     return target_path
 
-
-def _make_temp_clone_root(target_root: Path) -> Path:
-    """Create a writable temp directory near the requested target root."""
-    parent = target_root.expanduser().resolve().parent
-    parent.mkdir(parents=True, exist_ok=True)
-    tmp_root = parent / f".magicskills-install-{uuid.uuid4().hex}"
-    tmp_root.mkdir(parents=True, exist_ok=False)
-    return tmp_root
-
-
 def _install_and_sync(
     skill_dirs: list[Path],
     target_root: Path,
@@ -149,16 +139,13 @@ def install_from_git(
     if not is_git_url(repo_url):
         raise ValueError(f"Unsupported source: {source}")
 
-    tmp_path = _make_temp_clone_root(target_root)
-    try:
-        clone_dir = tmp_path / "repo"
-        subprocess.run(["git", "clone", "--depth", "1", repo_url, str(clone_dir)], check=True)
-        skill_dirs = _collect_skill_dirs(clone_dir)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        subprocess.run(["git", "clone", "--depth", "1", repo_url, str(tmp_path)], check=True)
+        skill_dirs = _collect_skill_dirs(tmp_path)
         if not skill_dirs:
             raise FileNotFoundError(f"No SKILL.md found in repo {repo_url}")
         return _install_and_sync(skill_dirs, target_root, yes, source=repo_url)
-    finally:
-        shutil.rmtree(tmp_path, ignore_errors=True)
 
 
 def install_from_magicskills(
@@ -170,14 +157,11 @@ def install_from_magicskills(
     requested_skill = skill_name.strip()
     if not requested_skill:
         raise ValueError("install_from_magicskills requires a non-empty skill name")
-    tmp_path = _make_temp_clone_root(target_root)
-    try:
-        clone_dir = tmp_path / "repo"
-        subprocess.run(["git", "clone", "--depth", "1", DEFAULT_SKILL_REPO, str(clone_dir)], check=True)
-        skill_dirs = _collect_named_skill_dirs(clone_dir, requested_skill)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        subprocess.run(["git", "clone", "--depth", "1", DEFAULT_SKILL_REPO, str(tmp_path)], check=True)
+        skill_dirs = _collect_named_skill_dirs(tmp_path, requested_skill)
         return _install_and_sync(skill_dirs, target_root, yes, source=DEFAULT_SKILL_REPO)
-    finally:
-        shutil.rmtree(tmp_path, ignore_errors=True)
 
 
 def install(

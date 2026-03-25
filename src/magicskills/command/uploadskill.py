@@ -110,7 +110,7 @@ def _github_user_from_auth() -> tuple[str, str]:
 def _ensure_fork_exists(repo_slug: str) -> None:
     """Create fork when missing; tolerate already-existing forks."""
     completed = subprocess.run(
-        ["gh", "repo", "fork", repo_slug, "--remote=false"],
+        ["gh", "repo", "fork", repo_slug],
         **TEXT_CAPTURE_KWARGS,
     )
     if completed.returncode == 0:
